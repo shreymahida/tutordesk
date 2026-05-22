@@ -9,20 +9,26 @@ import CalendarPage from './components/Calendar'
 import Payments from './components/Payments'
 import Progress from './components/Progress'
 import Team from './pages/Team'
+import Families from './pages/Families'
+import Leads from './pages/Leads'
 import ParentPortal from './pages/ParentPortal'
-import { LayoutDashboard, Users, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2 } from 'lucide-react'
+import FamilyPortal from './pages/FamilyPortal'
+import BookPage from './pages/BookPage'
+import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'students', label: 'Students', icon: Users },
+  { id: 'families', label: 'Families', icon: Users2 },
   { id: 'sessions', label: 'Sessions', icon: Calendar },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'payments', label: 'Payments', icon: DollarSign },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
+  { id: 'leads', label: 'Leads', icon: Inbox },
   { id: 'team', label: 'Team', icon: UserCircle2 },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, sessions: Sessions, calendar: CalendarPage, payments: Payments, progress: Progress, team: Team }
+const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, payments: Payments, progress: Progress, leads: Leads, team: Team }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()
@@ -31,7 +37,7 @@ function MainApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const Page = PAGES[page]
 
-  const visibleNav = NAV.filter(n => n.id !== 'team' || isAdmin)
+  const visibleNav = NAV.filter(n => (n.id !== 'team' && n.id !== 'leads') || isAdmin)
 
   function navigate(id) { setPage(id); setSidebarOpen(false) }
 
@@ -130,10 +136,12 @@ function AppShell() {
 }
 
 function PublicRouter() {
-  // Simple path matcher for parent portal: /parent/<uuid>
   const path = window.location.pathname
-  const match = path.match(/^\/parent\/([0-9a-fA-F-]{36})\/?$/)
-  if (match) return <ParentPortal token={match[1]} />
+  const parentMatch = path.match(/^\/parent\/([0-9a-fA-F-]{36})\/?$/)
+  if (parentMatch) return <ParentPortal token={parentMatch[1]} />
+  const familyMatch = path.match(/^\/family\/([0-9a-fA-F-]{36})\/?$/)
+  if (familyMatch) return <FamilyPortal token={familyMatch[1]} />
+  if (path === '/book' || path === '/book/') return <BookPage />
   return null
 }
 

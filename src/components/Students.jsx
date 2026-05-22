@@ -6,10 +6,10 @@ import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check } fro
 const SUBJECTS = ['Math', 'Algebra', 'Geometry', 'Calculus', 'Physics', 'Chemistry', 'Biology', 'English', 'Writing', 'History', 'SAT Prep', 'ACT Prep', 'Spanish', 'French', 'Computer Science']
 const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'College', 'Adult']
 
-const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '' }
+const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '', familyId: null, billingFrequency: 'per-session' }
 
 export default function Students() {
-  const { students, addStudent, addStudents, updateStudent, deleteStudent } = useApp()
+  const { students, addStudent, addStudents, updateStudent, deleteStudent, families, addFamily } = useApp()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(BLANK)
@@ -209,12 +209,29 @@ export default function Students() {
                 ))}
               </div>
             </Field>
-            <Field label="Status">
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input">
-                <option>active</option>
-                <option>inactive</option>
-                <option>on-hold</option>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Status">
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input">
+                  <option>active</option>
+                  <option>inactive</option>
+                  <option>on-hold</option>
+                </select>
+              </Field>
+              <Field label="Billing">
+                <select value={form.billingFrequency} onChange={e => setForm(f => ({ ...f, billingFrequency: e.target.value }))} className="input">
+                  <option value="per-session">Per session</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </Field>
+            </div>
+            <Field label="Family (link siblings)">
+              <select value={form.familyId || ''} onChange={e => setForm(f => ({ ...f, familyId: e.target.value || null }))} className="input">
+                <option value="">No family / solo student</option>
+                {families.map(fam => (
+                  <option key={fam.id} value={fam.id}>{fam.parentName || fam.parentEmail || '(unnamed)'}{fam.parentEmail ? ` — ${fam.parentEmail}` : ''}</option>
+                ))}
               </select>
+              <p className="text-xs text-gray-400 mt-1">Manage families separately to share one parent portal link for all siblings.</p>
             </Field>
             <Field label="Notes">
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input min-h-[80px] resize-none" placeholder="Any notes about this student..." />

@@ -12,6 +12,9 @@ export function AppProvider({ children }) {
   const [sessions, setSessions] = useState([])
   const [payments, setPayments] = useState([])
   const [progressNotes, setProgressNotes] = useState([])
+  const [families, setFamilies] = useState([])
+  const [leads, setLeads] = useState([])
+  const [settings, setSettings] = useState(null)
   const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
@@ -22,14 +25,93 @@ export function AppProvider({ children }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, loadSessions)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, loadPayments)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'progress_notes' }, loadProgressNotes)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'families' }, loadFamilies)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, loadLeads)
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [user])
 
   async function loadAll() {
     setDataLoading(true)
-    await Promise.all([loadStudents(), loadSessions(), loadPayments(), loadProgressNotes()])
+    await Promise.all([loadStudents(), loadSessions(), loadPayments(), loadProgressNotes(), loadFamilies(), loadLeads(), loadSettings()])
     setDataLoading(false)
+  }
+
+  async function loadFamilies() {
+    const { data } = await supabase.from('families').select('*').order('created_at', { ascending: false })
+    setFamilies(fromDB(data))
+  }
+  async function loadLeads() {
+    const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+    setLeads(fromDB(data))
+  }
+  async function loadSettings() {
+    const { data } = await supabase.from('settings').select('*').eq('id', 1).maybeSingle()
+    setSettings(data ? camelize(data) : null)
+  }
+  async function updateSettings(patch) {
+    const { data } = await supabase.from('settings').update(snakify(patch)).eq('id', 1).select().single()
+    if (data) setSettings(camelize(data))
+  }
+
+  // ── Families ─────────────────────────────────────────────────────────────
+  async function addFamily(f) {
+    const { data } = await supabase.from('families').insert(snakify(f)).select().single()
+    if (data) setFamilies(p => [camelize(data), ...p])
+    return data ? camelize(data) : null
+  }
+  async function updateFamily(id, f) {
+    const { data } = await supabase.from('families').update(snakify(f)).eq('id', id).select().single()
+    if (data) setFamilies(p => p.map(x => x.id === id ? camelize(data) : x))
+  }
+  async function deleteFamily(id) {
+    await supabase.from('families').delete().eq('id', id)
+    setFamilies(p => p.filter(x => x.id !== id))
+  }
+
+  // ── Leads ────────────────────────────────────────────────────────────────
+  async function updateLead(id, patch) {
+    const { data } = await supabase.from('leads').update(snakify(patch)).eq('id', id).select().single()
+    if (data) setLeads(p => p.map(x => x.id === id ? camelize(data) : x))
+  }
+  async function deleteLead(id) {
+    await supabase.from('leads').delete().eq('id', id)
+    setLeads(p => p.filter(x => x.id !== id))
+  }
+
+  // ── Monthly invoicing ────────────────────────────────────────────────────
+  // Find completed sessions for monthly-billing students in the given month
+  // that don't yet have a payment, and create one bundled invoice per student.
+  async function generateMonthlyInvoices(year, month) {
+    const ymStart = `${year}-${String(month).padStart(2, '0')}-01`
+    const ymEnd = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const period = `${year}-${String(month).padStart(2, '0')}`
+
+    const monthlyStudents = students.filter(s => s.billingFrequency === 'monthly' && s.status === 'active')
+    let created = 0
+    for (const student of monthlyStudents) {
+      const studentSessions = sessions.filter(
+        s => s.studentId === student.id && s.status === 'completed' &&
+        s.date >= ymStart && s.date < ymEnd
+      )
+      if (studentSessions.length === 0) continue
+      // Skip if a billing-period invoice already exists for this student
+      const existing = payments.find(p => p.studentId === student.id && p.billingPeriod === period)
+      if (existing) continue
+
+      const totalMinutes = studentSessions.reduce((sum, s) => sum + s.duration, 0)
+      const amount = parseFloat(((totalMinutes / 60) * student.rate).toFixed(2))
+      await addPayment({
+        studentId: student.id,
+        amount,
+        date: ymEnd,
+        status: 'pending',
+        method: '',
+        billingPeriod: period,
+      })
+      created++
+    }
+    return created
   }
 
   async function loadStudents() {
@@ -154,6 +236,10 @@ export function AppProvider({ children }) {
       sessions, addSession, updateSession, deleteSession, deleteRecurrence, findConflict,
       payments, addPayment, updatePayment, deletePayment,
       progressNotes, addProgressNote, updateProgressNote, deleteProgressNote,
+      families, addFamily, updateFamily, deleteFamily,
+      leads, updateLead, deleteLead,
+      settings, updateSettings,
+      generateMonthlyInvoices,
     }}>
       {children}
     </AppContext.Provider>

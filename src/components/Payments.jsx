@@ -1,17 +1,23 @@
 import { useState } from 'react'
 import { useApp } from '../store'
-import { Plus, X, DollarSign, CheckCircle, Printer } from 'lucide-react'
+import { Plus, X, DollarSign, CheckCircle, Printer, Calendar as CalendarIcon, CreditCard } from 'lucide-react'
 
-const METHODS = ['Cash', 'Venmo', 'Zelle', 'PayPal', 'Check', 'Bank Transfer', 'Other']
+const METHODS = ['Cash', 'Venmo', 'Zelle', 'PayPal', 'Check', 'Bank Transfer', 'Stripe', 'Other']
 
-const BLANK = { studentId: '', amount: '', date: '', status: 'pending', method: '', notes: '' }
+const BLANK = { studentId: '', amount: '', date: '', status: 'pending', method: '', notes: '', stripeLink: '' }
 
 export default function Payments() {
-  const { students, sessions, payments, addPayment, updatePayment, deletePayment } = useApp()
+  const { students, sessions, payments, addPayment, updatePayment, deletePayment, generateMonthlyInvoices } = useApp()
   const [filter, setFilter] = useState('all')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(BLANK)
   const [invoiceView, setInvoiceView] = useState(null)
+  const [billModal, setBillModal] = useState(false)
+  const [billMonth, setBillMonth] = useState(() => {
+    const d = new Date()
+    return { year: d.getFullYear(), month: d.getMonth() + 1 }
+  })
+  const [billResult, setBillResult] = useState(null)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -43,6 +49,11 @@ export default function Payments() {
     setInvoiceView({ payment: p, student, session })
   }
 
+  async function runMonthlyInvoicing() {
+    const count = await generateMonthlyInvoices(billMonth.year, billMonth.month)
+    setBillResult(count)
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -50,9 +61,15 @@ export default function Payments() {
           <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
           <p className="text-gray-500 text-sm mt-1">{payments.length} payment record{payments.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} /> Add Payment
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { setBillResult(null); setBillModal(true) }}
+            className="flex items-center gap-2 bg-white border border-gray-200 hover:border-violet-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            <CalendarIcon size={15} /> Monthly Invoices
+          </button>
+          <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus size={16} /> Add Payment
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -173,10 +190,73 @@ export default function Payments() {
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <CreditCard size={12} /> Stripe payment link
+                </label>
+                <input value={form.stripeLink || ''} onChange={e => setForm(f => ({ ...f, stripeLink: e.target.value }))}
+                  className="input" placeholder="https://buy.stripe.com/..." />
+                <p className="text-xs text-gray-400 mt-1">Paste a Stripe Payment Link — parents see "Pay now" on their portal.</p>
+              </div>
             </div>
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={closeModal} className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
               <button onClick={handleSave} className="flex-1 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Monthly invoicing modal */}
+      {billModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900">Generate Monthly Invoices</h2>
+              <button onClick={() => setBillModal(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {billResult === null ? (
+                <>
+                  <p className="text-sm text-gray-600">
+                    Bundle all completed sessions in a month into one invoice per student.
+                    Only runs for students set to <strong>monthly billing</strong>.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Month</label>
+                      <select value={billMonth.month} onChange={e => setBillMonth(b => ({ ...b, month: Number(e.target.value) }))} className="input">
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                          <option key={m} value={m}>{new Date(2024, m - 1).toLocaleDateString('en-US', { month: 'long' })}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Year</label>
+                      <select value={billMonth.year} onChange={e => setBillMonth(b => ({ ...b, year: Number(e.target.value) }))} className="input">
+                        {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => <option key={y}>{y}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={runMonthlyInvoicing}
+                    className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium">
+                    Generate invoices
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle size={24} className="text-green-600" />
+                  </div>
+                  <p className="font-semibold text-gray-900">
+                    {billResult === 0 ? 'Nothing to invoice' : `Created ${billResult} invoice${billResult !== 1 ? 's' : ''}`}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {billResult === 0 ? 'No monthly-billing students had unbilled completed sessions in that month.' : 'Check the payments list for the new invoices.'}
+                  </p>
+                  <button onClick={() => setBillModal(false)} className="mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium">Close</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -204,7 +284,13 @@ export default function Payments() {
                 <Row label="Status" value={invoiceView.payment.status} />
                 {invoiceView.payment.method && <Row label="Method" value={invoiceView.payment.method} />}
               </dl>
-              <button onClick={() => window.print()} className="mt-5 w-full flex items-center justify-center gap-2 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+              {invoiceView.payment.stripeLink && (
+                <a href={invoiceView.payment.stripeLink} target="_blank" rel="noreferrer"
+                  className="mt-5 w-full flex items-center justify-center gap-2 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium">
+                  <CreditCard size={14} /> Open Stripe Payment Link
+                </a>
+              )}
+              <button onClick={() => window.print()} className="mt-2 w-full flex items-center justify-center gap-2 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
                 <Printer size={14} /> Print
               </button>
             </div>

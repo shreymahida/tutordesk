@@ -5,7 +5,9 @@ import { ChevronLeft, ChevronRight, Video } from 'lucide-react'
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function Calendar() {
-  const { sessions, students } = useApp()
+  const { sessions, students, updateSession } = useApp()
+  const [dragging, setDragging] = useState(null)
+  const [dragOver, setDragOver] = useState(null)
   const [cursor, setCursor] = useState(() => {
     const d = new Date()
     return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -46,6 +48,13 @@ export default function Calendar() {
 
   const selected = selectedDay ? grid.find(c => c?.date === selectedDay) : null
 
+  function onDrop(targetDate) {
+    if (!dragging || dragging.date === targetDate) { setDragging(null); setDragOver(null); return }
+    updateSession(dragging.id, { date: targetDate })
+    setDragging(null)
+    setDragOver(null)
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -77,11 +86,15 @@ export default function Calendar() {
             if (!cell) return <div key={i} className="aspect-square min-h-[80px] bg-gray-50/50 border-b border-r border-gray-50" />
             const isToday = cell.date === today
             const isSelected = cell.date === selectedDay
+            const isDragOver = dragOver === cell.date
             return (
-              <button
+              <div
                 key={i}
                 onClick={() => setSelectedDay(cell.date)}
-                className={`aspect-square min-h-[80px] p-1.5 border-b border-r border-gray-50 hover:bg-violet-50/40 transition-colors text-left flex flex-col ${isSelected ? 'bg-violet-50 ring-2 ring-violet-300 ring-inset' : ''}`}>
+                onDragOver={e => { e.preventDefault(); setDragOver(cell.date) }}
+                onDragLeave={() => setDragOver(d => d === cell.date ? null : d)}
+                onDrop={() => onDrop(cell.date)}
+                className={`aspect-square min-h-[80px] p-1.5 border-b border-r border-gray-50 hover:bg-violet-50/40 transition-colors text-left flex flex-col cursor-pointer ${isSelected ? 'bg-violet-50 ring-2 ring-violet-300 ring-inset' : ''} ${isDragOver ? 'bg-violet-100 ring-2 ring-violet-400 ring-inset' : ''}`}>
                 <div className={`text-xs font-semibold mb-1 ${isToday ? 'bg-violet-600 text-white rounded-full w-5 h-5 flex items-center justify-center' : 'text-gray-700'}`}>
                   {cell.day}
                 </div>
@@ -89,12 +102,16 @@ export default function Calendar() {
                   {cell.sessions.slice(0, 3).map(s => {
                     const student = students.find(st => st.id === s.studentId)
                     return (
-                      <div key={s.id} className={`text-xs px-1.5 py-0.5 rounded truncate ${
-                        s.status === 'completed' ? 'bg-green-50 text-green-700' :
-                        s.status === 'cancelled' ? 'bg-red-50 text-red-500 line-through' :
-                        s.status === 'no-show' ? 'bg-orange-50 text-orange-700' :
-                        'bg-violet-100 text-violet-800'
-                      }`} title={`${student?.name} · ${s.subject}`}>
+                      <div key={s.id}
+                        draggable={s.status === 'scheduled'}
+                        onDragStart={e => { setDragging(s); e.dataTransfer.effectAllowed = 'move' }}
+                        onDragEnd={() => { setDragging(null); setDragOver(null) }}
+                        className={`text-xs px-1.5 py-0.5 rounded truncate ${s.status === 'scheduled' ? 'cursor-grab active:cursor-grabbing' : ''} ${
+                          s.status === 'completed' ? 'bg-green-50 text-green-700' :
+                          s.status === 'cancelled' ? 'bg-red-50 text-red-500 line-through' :
+                          s.status === 'no-show' ? 'bg-orange-50 text-orange-700' :
+                          'bg-violet-100 text-violet-800'
+                        }`} title={`${student?.name} · ${s.subject}${s.status === 'scheduled' ? ' (drag to reschedule)' : ''}`}>
                         {formatTime(s.time)} {student?.name?.split(' ')[0]}
                       </div>
                     )
@@ -103,7 +120,7 @@ export default function Calendar() {
                     <div className="text-xs text-gray-400 px-1.5">+{cell.sessions.length - 3} more</div>
                   )}
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
