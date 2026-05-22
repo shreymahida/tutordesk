@@ -5,7 +5,6 @@ import { useAuth } from './context/AuthContext'
 const AppContext = createContext(null)
 
 const fromDB = rows => (rows || []).map(camelize)
-const oneFromDB = row => row ? camelize(row) : null
 
 export function AppProvider({ children }) {
   const { user } = useAuth()
@@ -18,15 +17,12 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!user) return
     loadAll()
-
-    // Real-time sync — all tutors see each other's changes live
     const channel = supabase.channel('app-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, loadStudents)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, loadSessions)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, loadPayments)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'progress_notes' }, loadProgressNotes)
       .subscribe()
-
     return () => supabase.removeChannel(channel)
   }, [user])
 
@@ -57,6 +53,13 @@ export function AppProvider({ children }) {
   async function addStudent(s) {
     const { data } = await supabase.from('students').insert(snakify(s)).select().single()
     if (data) setStudents(p => [...p, camelize(data)].sort((a, b) => a.name.localeCompare(b.name)))
+    return data ? camelize(data) : null
+  }
+  async function addStudents(arr) {
+    const rows = arr.map(s => snakify(s))
+    const { data } = await supabase.from('students').insert(rows).select()
+    if (data) setStudents(p => [...p, ...data.map(camelize)].sort((a, b) => a.name.localeCompare(b.name)))
+    return data?.length || 0
   }
   async function updateStudent(id, s) {
     const { data } = await supabase.from('students').update(snakify(s)).eq('id', id).select().single()
@@ -68,10 +71,36 @@ export function AppProvider({ children }) {
   }
 
   // ── Sessions ─────────────────────────────────────────────────────────────
-  async function addSession(s) {
-    const row = snakify({ ...s, tutorId: user.id })
-    const { data } = await supabase.from('sessions').insert(row).select().single()
-    if (data) setSessions(p => [camelize(data), ...p])
+  // Detects overlapping scheduled sessions for the same tutor or same student.
+  function findConflict(date, time, duration, ignoreId = null) {
+    if (!date || !time || !duration) return null
+    const start = toMin(time)
+    const end = start + duration
+    return sessions.find(s => {
+      if (s.id === ignoreId) return null
+      if (s.date !== date) return null
+      if (s.status === 'cancelled') return null
+      const sStart = toMin(s.time)
+      const sEnd = sStart + (s.duration || 60)
+      return start < sEnd && end > sStart
+    }) || null
+  }
+
+  async function addSession(s, { repeatWeeks = 0 } = {}) {
+    const base = snakify({ ...s, tutorId: user.id })
+    const rows = [base]
+    if (repeatWeeks > 0) {
+      const recurrenceId = crypto.randomUUID()
+      base.recurrence_id = recurrenceId
+      for (let i = 1; i <= repeatWeeks; i++) {
+        const d = new Date(s.date + 'T12:00:00')
+        d.setDate(d.getDate() + i * 7)
+        rows.push(snakify({ ...s, tutorId: user.id, date: d.toISOString().split('T')[0], recurrenceId }))
+      }
+    }
+    const { data } = await supabase.from('sessions').insert(rows).select()
+    if (data) setSessions(p => [...data.map(camelize), ...p])
+    return data?.length || 0
   }
   async function updateSession(id, s) {
     const { data } = await supabase.from('sessions').update(snakify(s)).eq('id', id).select().single()
@@ -80,6 +109,10 @@ export function AppProvider({ children }) {
   async function deleteSession(id) {
     await supabase.from('sessions').delete().eq('id', id)
     setSessions(p => p.filter(x => x.id !== id))
+  }
+  async function deleteRecurrence(recurrenceId) {
+    await supabase.from('sessions').delete().eq('recurrence_id', recurrenceId)
+    setSessions(p => p.filter(x => x.recurrenceId !== recurrenceId))
   }
 
   // ── Payments ──────────────────────────────────────────────────────────────
@@ -117,14 +150,20 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       dataLoading,
-      students, addStudent, updateStudent, deleteStudent,
-      sessions, addSession, updateSession, deleteSession,
+      students, addStudent, addStudents, updateStudent, deleteStudent,
+      sessions, addSession, updateSession, deleteSession, deleteRecurrence, findConflict,
       payments, addPayment, updatePayment, deletePayment,
       progressNotes, addProgressNote, updateProgressNote, deleteProgressNote,
     }}>
       {children}
     </AppContext.Provider>
   )
+}
+
+function toMin(t) {
+  if (!t) return 0
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + (m || 0)
 }
 
 export const useApp = () => useContext(AppContext)

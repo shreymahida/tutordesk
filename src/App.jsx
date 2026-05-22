@@ -1,25 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppProvider, useApp } from './store'
 import Login from './pages/Login'
 import Dashboard from './components/Dashboard'
 import Students from './components/Students'
 import Sessions from './components/Sessions'
+import CalendarPage from './components/Calendar'
 import Payments from './components/Payments'
 import Progress from './components/Progress'
 import Team from './pages/Team'
-import { LayoutDashboard, Users, Calendar, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2 } from 'lucide-react'
+import ParentPortal from './pages/ParentPortal'
+import { LayoutDashboard, Users, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2 } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'students', label: 'Students', icon: Users },
   { id: 'sessions', label: 'Sessions', icon: Calendar },
+  { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'payments', label: 'Payments', icon: DollarSign },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
   { id: 'team', label: 'Team', icon: UserCircle2 },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, sessions: Sessions, payments: Payments, progress: Progress, team: Team }
+const PAGES = { dashboard: Dashboard, students: Students, sessions: Sessions, calendar: CalendarPage, payments: Payments, progress: Progress, team: Team }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()
@@ -56,7 +59,7 @@ function MainApp() {
               <GraduationCap size={16} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-sm leading-tight">TutorDesk</p>
+              <p className="font-bold text-gray-900 text-sm leading-tight">TutorHQ</p>
               <p className="text-xs text-gray-400">Business Manager</p>
             </div>
           </div>
@@ -126,7 +129,17 @@ function AppShell() {
   )
 }
 
+function PublicRouter() {
+  // Simple path matcher for parent portal: /parent/<uuid>
+  const path = window.location.pathname
+  const match = path.match(/^\/parent\/([0-9a-fA-F-]{36})\/?$/)
+  if (match) return <ParentPortal token={match[1]} />
+  return null
+}
+
 export default function App() {
+  const publicPage = PublicRouter()
+  if (publicPage) return publicPage
   return (
     <AuthProvider>
       <AppShell />

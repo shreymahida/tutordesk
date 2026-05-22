@@ -38,7 +38,7 @@ export default function Login() {
           <div className="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
             <GraduationCap size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">TutorDesk</h1>
+          <h1 className="text-2xl font-bold text-gray-900">TutorHQ</h1>
           <p className="text-gray-500 text-sm mt-1">Business Manager</p>
         </div>
 

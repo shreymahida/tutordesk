@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Papa from 'papaparse'
 import { useApp } from '../store'
-import { Plus, Edit2, Trash2, X, Search, User } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check } from 'lucide-react'
 
 const SUBJECTS = ['Math', 'Algebra', 'Geometry', 'Calculus', 'Physics', 'Chemistry', 'Biology', 'English', 'Writing', 'History', 'SAT Prep', 'ACT Prep', 'Spanish', 'French', 'Computer Science']
 const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'College', 'Adult']
@@ -8,11 +9,17 @@ const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9t
 const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '' }
 
 export default function Students() {
-  const { students, addStudent, updateStudent, deleteStudent } = useApp()
+  const { students, addStudent, addStudents, updateStudent, deleteStudent } = useApp()
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState(null) // null | 'add' | student object
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState(BLANK)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [importModal, setImportModal] = useState(false)
+  const [importPreview, setImportPreview] = useState(null)
+  const [importError, setImportError] = useState('')
+  const [shareModal, setShareModal] = useState(null)
+  const [copiedToken, setCopiedToken] = useState(null)
+  const fileRef = useRef(null)
 
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -45,6 +52,47 @@ export default function Students() {
     setConfirmDelete(null)
   }
 
+  function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportError('')
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: ({ data, errors }) => {
+        if (errors.length) { setImportError('CSV parse error: ' + errors[0].message); return }
+        const cleaned = data.map(row => ({
+          name: (row.name || row.Name || '').trim(),
+          email: (row.email || row.Email || '').trim(),
+          phone: (row.phone || row.Phone || '').trim(),
+          grade: (row.grade || row.Grade || '9th').trim(),
+          subjects: (row.subjects || row.Subjects || '').split(/[,;|]/).map(s => s.trim()).filter(Boolean),
+          rate: parseFloat(row.rate || row.Rate || 0) || 0,
+          status: (row.status || row.Status || 'active').trim() || 'active',
+          notes: (row.notes || row.Notes || '').trim(),
+        })).filter(r => r.name)
+        if (cleaned.length === 0) { setImportError('No valid rows found. Make sure the CSV has a "name" column.'); return }
+        setImportPreview(cleaned)
+      },
+      error: (err) => setImportError('Failed to read file: ' + err.message),
+    })
+    e.target.value = ''
+  }
+
+  async function confirmImport() {
+    const added = await addStudents(importPreview)
+    setImportModal(false)
+    setImportPreview(null)
+    alert(`Imported ${added} student${added !== 1 ? 's' : ''}.`)
+  }
+
+  function copyShareLink(token) {
+    const url = `${window.location.origin}/parent/${token}`
+    navigator.clipboard.writeText(url)
+    setCopiedToken(token)
+    setTimeout(() => setCopiedToken(null), 2000)
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -52,9 +100,15 @@ export default function Students() {
           <h1 className="text-2xl font-bold text-gray-900">Students</h1>
           <p className="text-gray-500 text-sm mt-1">{students.length} student{students.length !== 1 ? 's' : ''} total</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} /> Add Student
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { setImportError(''); setImportPreview(null); setImportModal(true) }}
+            className="flex items-center gap-2 bg-white border border-gray-200 hover:border-violet-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Upload size={15} /> Import CSV
+          </button>
+          <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus size={16} /> Add Student
+          </button>
+        </div>
       </div>
 
       <div className="relative">
@@ -100,6 +154,9 @@ export default function Students() {
             <div className="flex gap-2 pt-3 border-t border-gray-100">
               <button onClick={() => openEdit(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors">
                 <Edit2 size={13} /> Edit
+              </button>
+              <button onClick={() => setShareModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors">
+                <Share2 size={13} /> Share
               </button>
               <button onClick={() => setConfirmDelete(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 py-1.5 rounded-lg transition-colors">
                 <Trash2 size={13} /> Delete
@@ -177,6 +234,82 @@ export default function Students() {
           <div className="flex gap-3 mt-6">
             <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
             <button onClick={() => handleDelete(confirmDelete.id)} className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">Delete</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* CSV Import modal */}
+      {importModal && (
+        <Modal title="Import students from CSV" onClose={() => setImportModal(false)}>
+          {!importPreview ? (
+            <>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload a CSV with these columns (case insensitive):<br />
+                <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">name, email, phone, grade, subjects, rate, status, notes</code>
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                Only <strong>name</strong> is required. Separate multiple subjects with commas or semicolons inside the cell.
+              </p>
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+              <button onClick={() => fileRef.current?.click()}
+                className="w-full py-8 border-2 border-dashed border-gray-300 hover:border-violet-400 rounded-xl text-gray-500 hover:text-violet-600 transition-colors">
+                <Upload size={24} className="mx-auto mb-2" />
+                <p className="text-sm font-medium">Click to choose a CSV file</p>
+              </button>
+              {importError && (
+                <p className="text-sm text-red-600 mt-3">{importError}</p>
+              )}
+              <a
+                href={'data:text/csv;charset=utf-8,' + encodeURIComponent('name,email,phone,grade,subjects,rate,status,notes\nJane Doe,jane@example.com,555-0101,10th,"Math,Physics",60,active,\n')}
+                download="students-template.csv"
+                className="block text-center text-xs text-violet-600 hover:underline mt-4">
+                Download template CSV
+              </a>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 mb-3">Found <strong>{importPreview.length}</strong> students to import.</p>
+              <div className="max-h-64 overflow-y-auto border border-gray-100 rounded-lg">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr className="text-left text-gray-500">
+                      <th className="px-3 py-2 font-medium">Name</th>
+                      <th className="px-3 py-2 font-medium">Grade</th>
+                      <th className="px-3 py-2 font-medium">Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {importPreview.map((r, i) => (
+                      <tr key={i}><td className="px-3 py-1.5">{r.name}</td><td className="px-3 py-1.5">{r.grade}</td><td className="px-3 py-1.5">${r.rate}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => setImportPreview(null)} className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Back</button>
+                <button onClick={confirmImport} className="flex-1 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium">Import {importPreview.length}</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
+      {/* Share parent link modal */}
+      {shareModal && (
+        <Modal title={`Parent link for ${shareModal.name}`} onClose={() => setShareModal(null)}>
+          <p className="text-sm text-gray-600 mb-4">
+            Send this link to {shareModal.name.split(' ')[0]}'s parent — they'll see sessions, payments, and progress notes (view only, no login).
+          </p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={`${window.location.origin}/parent/${shareModal.shareToken}`}
+              className="input text-xs font-mono"
+            />
+            <button onClick={() => copyShareLink(shareModal.shareToken)}
+              className="px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-medium flex items-center gap-1">
+              {copiedToken === shareModal.shareToken ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
+            </button>
           </div>
         </Modal>
       )}

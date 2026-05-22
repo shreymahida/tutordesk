@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useApp } from '../store'
-import { Plus, X, Star, TrendingUp, Edit2, Trash2 } from 'lucide-react'
+import { Plus, X, Star, TrendingUp, Edit2, Trash2, FileText } from 'lucide-react'
+import { exportProgressPDF } from '../lib/pdfReport'
 
 const BLANK = { studentId: '', subject: '', date: '', content: '', rating: 3 }
 
 export default function Progress() {
-  const { students, progressNotes, addProgressNote, updateProgressNote, deleteProgressNote } = useApp()
+  const { students, sessions, progressNotes, addProgressNote, updateProgressNote, deleteProgressNote } = useApp()
   const [selectedStudent, setSelectedStudent] = useState('all')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(BLANK)
@@ -43,9 +44,24 @@ export default function Progress() {
           <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
           <p className="text-gray-500 text-sm mt-1">Track student progress over time</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} /> Add Note
-        </button>
+        <div className="flex gap-2">
+          {selectedStudent !== 'all' && (
+            <button
+              onClick={() => {
+                const student = students.find(s => s.id === selectedStudent)
+                if (!student) return
+                const studentNotes = progressNotes.filter(n => n.studentId === selectedStudent)
+                const studentSessions = sessions.filter(s => s.studentId === selectedStudent)
+                exportProgressPDF({ student, notes: studentNotes, sessions: studentSessions })
+              }}
+              className="flex items-center gap-2 bg-white border border-gray-200 hover:border-violet-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+              <FileText size={15} /> Export PDF
+            </button>
+          )}
+          <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus size={16} /> Add Note
+          </button>
+        </div>
       </div>
 
       {/* Student filter */}

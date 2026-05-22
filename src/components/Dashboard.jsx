@@ -1,5 +1,6 @@
 import { useApp } from '../store'
-import { Users, Calendar, DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { Users, Calendar, DollarSign, TrendingUp, Clock, CheckCircle, UserX } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 export default function Dashboard() {
   const { students, sessions, payments } = useApp()
@@ -8,12 +9,13 @@ export default function Dashboard() {
   const activeStudents = students.filter(s => s.status === 'active').length
   const upcomingSessions = sessions.filter(s => s.date >= today && s.status === 'scheduled').length
   const completedSessions = sessions.filter(s => s.status === 'completed').length
-  const totalRevenue = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)
-  const pendingRevenue = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0)
+  const noShowCount = sessions.filter(s => s.status === 'no-show').length
+  const totalRevenue = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0)
+  const pendingRevenue = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + Number(p.amount), 0)
 
-  const recentSessions = [...sessions]
-    .sort((a, b) => (a.date + a.time) > (b.date + b.time) ? -1 : 1)
-    .slice(0, 5)
+  // Revenue last 8 weeks
+  const revenueData = computeWeeklyRevenue(payments)
+  const sessionsBySubject = computeSubjectBreakdown(sessions)
 
   const upcoming = sessions
     .filter(s => s.date >= today && s.status === 'scheduled')
@@ -28,11 +30,48 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Users size={20} />} label="Active Students" value={activeStudents} color="blue" />
-        <StatCard icon={<Calendar size={20} />} label="Upcoming Sessions" value={upcomingSessions} color="violet" />
-        <StatCard icon={<CheckCircle size={20} />} label="Sessions Done" value={completedSessions} color="green" />
-        <StatCard icon={<DollarSign size={20} />} label="Revenue Collected" value={`$${totalRevenue.toFixed(0)}`} color="emerald" />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard icon={<Users size={18} />} label="Active Students" value={activeStudents} color="blue" />
+        <StatCard icon={<Calendar size={18} />} label="Upcoming" value={upcomingSessions} color="violet" />
+        <StatCard icon={<CheckCircle size={18} />} label="Sessions Done" value={completedSessions} color="green" />
+        <StatCard icon={<UserX size={18} />} label="No-shows" value={noShowCount} color="orange" />
+        <StatCard icon={<DollarSign size={18} />} label="Collected" value={`$${totalRevenue.toFixed(0)}`} color="emerald" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue chart */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><TrendingUp size={16} /> Revenue (last 8 weeks)</h2>
+          <p className="text-xs text-gray-400 mb-3">Paid invoices grouped by week</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={revenueData} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} formatter={v => `$${v}`} />
+              <Line type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2.5} dot={{ fill: '#8b5cf6', r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Subject breakdown */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><Calendar size={16} /> Sessions by subject</h2>
+          <p className="text-xs text-gray-400 mb-3">All-time count</p>
+          {sessionsBySubject.length === 0 ? (
+            <p className="text-sm text-gray-400 mt-4">No data yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={sessionsBySubject} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                <XAxis dataKey="subject" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
+                <Bar dataKey="count" fill="#a78bfa" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -74,50 +113,18 @@ export default function Dashboard() {
                 <p className="text-amber-600 text-xs">outstanding balance</p>
               </div>
               <ul className="space-y-2">
-                {payments.filter(p => p.status === 'pending').map(p => {
+                {payments.filter(p => p.status === 'pending').slice(0, 5).map(p => {
                   const student = students.find(s => s.id === p.studentId)
                   return (
                     <li key={p.id} className="flex justify-between text-sm">
                       <span className="text-gray-700">{student?.name}</span>
-                      <span className="font-medium text-gray-900">${p.amount.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900">${Number(p.amount).toFixed(2)}</span>
                     </li>
                   )
                 })}
               </ul>
             </>
           )}
-        </div>
-      </div>
-
-      {/* Recent activity */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><TrendingUp size={16} /> Recent Sessions</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-400 text-xs uppercase border-b border-gray-100">
-                <th className="pb-2 font-medium">Student</th>
-                <th className="pb-2 font-medium">Subject</th>
-                <th className="pb-2 font-medium">Date</th>
-                <th className="pb-2 font-medium">Duration</th>
-                <th className="pb-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {recentSessions.map(s => {
-                const student = students.find(st => st.id === s.studentId)
-                return (
-                  <tr key={s.id}>
-                    <td className="py-2 font-medium text-gray-900">{student?.name}</td>
-                    <td className="py-2 text-gray-600">{s.subject}</td>
-                    <td className="py-2 text-gray-600">{formatDate(s.date)}</td>
-                    <td className="py-2 text-gray-600">{s.duration}min</td>
-                    <td className="py-2"><StatusBadge status={s.status} /></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
@@ -129,31 +136,51 @@ function StatCard({ icon, label, value, color }) {
     blue: 'bg-blue-50 text-blue-600',
     violet: 'bg-violet-50 text-violet-600',
     green: 'bg-green-50 text-green-600',
+    orange: 'bg-orange-50 text-orange-600',
     emerald: 'bg-emerald-50 text-emerald-600',
   }
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className={`inline-flex p-2 rounded-lg ${colors[color]} mb-3`}>{icon}</div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-500 mt-0.5">{label}</p>
+      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
     </div>
   )
 }
 
-function StatusBadge({ status }) {
-  const map = {
-    scheduled: 'bg-blue-50 text-blue-700',
-    completed: 'bg-green-50 text-green-700',
-    cancelled: 'bg-red-50 text-red-700',
+function computeWeeklyRevenue(payments) {
+  const weeks = []
+  const now = new Date()
+  for (let i = 7; i >= 0; i--) {
+    const start = new Date(now)
+    start.setDate(now.getDate() - now.getDay() - i * 7)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 7)
+    const total = payments
+      .filter(p => p.status === 'paid' && p.date >= start.toISOString().split('T')[0] && p.date < end.toISOString().split('T')[0])
+      .reduce((s, p) => s + Number(p.amount), 0)
+    weeks.push({
+      label: start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      amount: Number(total.toFixed(2)),
+    })
   }
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[status] || 'bg-gray-100 text-gray-600'}`}>{status}</span>
+  return weeks
+}
+
+function computeSubjectBreakdown(sessions) {
+  const map = {}
+  sessions.forEach(s => {
+    if (s.status === 'cancelled') return
+    map[s.subject] = (map[s.subject] || 0) + 1
+  })
+  return Object.entries(map).map(([subject, count]) => ({ subject, count })).sort((a, b) => b.count - a.count).slice(0, 8)
 }
 
 function formatDate(d) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
-
 function formatTime(t) {
+  if (!t) return ''
   const [h, m] = t.split(':').map(Number)
   const ampm = h >= 12 ? 'PM' : 'AM'
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
