@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Users, Shield, UserCheck, Mail, X, RefreshCw } from 'lucide-react'
+import { Users, Shield, UserCheck, Mail, X, RefreshCw, Trash2 } from 'lucide-react'
 
 export default function Team() {
   const { profile: myProfile, isAdmin, inviteTutor } = useAuth()
@@ -11,6 +11,7 @@ export default function Team() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteStatus, setInviteStatus] = useState('')
   const [inviteLoading, setInviteLoading] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(null)
 
   useEffect(() => { fetchProfiles() }, [])
 
@@ -24,6 +25,12 @@ export default function Team() {
   async function changeRole(id, role) {
     await supabase.from('profiles').update({ role }).eq('id', id)
     setProfiles(p => p.map(x => x.id === id ? { ...x, role } : x))
+  }
+
+  async function removeProfile(id) {
+    await supabase.from('profiles').delete().eq('id', id)
+    setProfiles(p => p.filter(x => x.id !== id))
+    setConfirmRemove(null)
   }
 
   async function handleInvite(e) {
@@ -109,11 +116,18 @@ export default function Team() {
                   {isAdmin && (
                     <td className="px-4 py-3">
                       {p.id !== myProfile?.id && (
-                        <button
-                          onClick={() => changeRole(p.id, p.role === 'admin' ? 'tutor' : 'admin')}
-                          className="text-xs text-violet-600 hover:underline">
-                          Make {p.role === 'admin' ? 'tutor' : 'admin'}
-                        </button>
+                        <div className="flex items-center gap-3 justify-end">
+                          <button
+                            onClick={() => changeRole(p.id, p.role === 'admin' ? 'tutor' : 'admin')}
+                            className="text-xs text-violet-600 hover:underline">
+                            Make {p.role === 'admin' ? 'tutor' : 'admin'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemove(p)}
+                            className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex items-center gap-1">
+                            <Trash2 size={12} /> Remove
+                          </button>
+                        </div>
                       )}
                     </td>
                   )}
@@ -166,6 +180,25 @@ export default function Team() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Remove confirm */}
+      {confirmRemove && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h2 className="font-semibold text-gray-900 mb-2">Remove {confirmRemove.name || confirmRemove.email}?</h2>
+            <p className="text-gray-600 text-sm mb-2">
+              They'll lose all access to TutorHQ immediately. Their existing data (students, sessions, payments) stays in the system.
+            </p>
+            <p className="text-gray-400 text-xs mb-5">
+              To fully delete their login account, also go to Supabase → Authentication → Users → find {confirmRemove.email} → delete.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmRemove(null)} className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onClick={() => removeProfile(confirmRemove.id)} className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">Remove access</button>
+            </div>
           </div>
         </div>
       )}
