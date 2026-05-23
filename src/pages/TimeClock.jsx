@@ -2,19 +2,24 @@ import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../store'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Clock, Play, Square, Calendar, Users, TrendingUp } from 'lucide-react'
+import { Clock, Play, Square, Calendar, Users, TrendingUp, GraduationCap, Fingerprint } from 'lucide-react'
 
 export default function TimeClock() {
-  const { isAdmin } = useAuth()
-  const { getMyOpenEntry, clockIn, clockOut, getTimeEntries } = useApp()
+  const { isAdmin, profile } = useAuth()
+  const { getMyOpenEntry, clockIn, clockOut, getTimeEntries, students, sessions } = useApp()
   const [openEntry, setOpenEntry] = useState(null)
   const [entries, setEntries] = useState([])
   const [profiles, setProfiles] = useState({})
   const [now, setNow] = useState(Date.now())
   const [scope, setScope] = useState('me')
   const [note, setNote] = useState('')
+  const [studentId, setStudentId] = useState('')
   const [loading, setLoading] = useState(true)
   const tick = useRef(null)
+
+  // Students this user can pick (tutors: those they have sessions with; admin: all)
+  const myStudents = isAdmin ? students : students.filter(s => sessions.some(se => se.studentId === s.id && se.tutorId === profile?.id))
+  const studentName = id => students.find(s => s.id === id)?.name
 
   async function refresh() {
     const open = await getMyOpenEntry()
@@ -40,7 +45,7 @@ export default function TimeClock() {
   }, [])
 
   async function handleClockIn() {
-    const e = await clockIn(note)
+    const e = await clockIn(note, studentId || null)
     setNote('')
     setOpenEntry(e)
     refresh()
@@ -68,47 +73,66 @@ export default function TimeClock() {
         <p className="text-gray-500 text-[15px] mt-1">Track your hours — clock in when you start, out when you're done.</p>
       </div>
 
-      {/* The big clock card */}
-      <div className={`relative overflow-hidden rounded-3xl p-8 text-center transition-colors ${openEntry ? 'bg-gradient-to-br from-violet-600 to-violet-800' : 'bg-white card'}`}>
-        {openEntry && (
-          <>
-            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-[-30%] left-[-5%] w-72 h-72 bg-white/5 rounded-full blur-2xl" />
-          </>
-        )}
-        <div className="relative">
-          <div className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full mb-5 ${openEntry ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${openEntry ? 'bg-green-300 animate-pulse' : 'bg-gray-400'}`} />
-            {openEntry ? 'On the clock' : 'Clocked out'}
-          </div>
+      {/* Digital ID card — tap to clock in/out */}
+      <div className="max-w-md mx-auto w-full">
+        <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-[0_8px_32px_rgba(124,58,237,0.3)] transition-all ${openEntry ? 'bg-gradient-to-br from-green-600 to-emerald-700' : 'bg-gradient-to-br from-violet-600 to-violet-800'}`}>
+          <div className="absolute top-[-25%] right-[-10%] w-56 h-56 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute bottom-[-30%] left-[-10%] w-56 h-56 bg-black/10 rounded-full blur-2xl" />
 
-          <div className={`text-6xl font-semibold tracking-tight tabular-nums ${openEntry ? 'text-white' : 'text-gray-900'}`}>
-            {openEntry ? formatDuration(elapsedMs) : '00:00:00'}
-          </div>
+          <div className="relative">
+            {/* Top row: brand + status */}
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-xs font-semibold tracking-widest uppercase text-white/70">TutorHQ · Staff ID</span>
+              <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${openEntry ? 'bg-white/25' : 'bg-white/15'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${openEntry ? 'bg-green-200 animate-pulse' : 'bg-white/60'}`} />
+                {openEntry ? 'On the clock' : 'Clocked out'}
+              </span>
+            </div>
 
-          {openEntry && (
-            <p className="text-violet-200 text-sm mt-3">
-              Started at {formatTime(openEntry.clockIn)}{openEntry.note ? ` · ${openEntry.note}` : ''}
-            </p>
-          )}
+            {/* Identity */}
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden ring-2 ring-white/30">
+                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" /> : (profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold leading-tight truncate">{profile?.name || profile?.email}</p>
+                <p className="text-white/70 text-sm capitalize">{profile?.role}{profile?.pronouns ? ` · ${profile.pronouns}` : ''}</p>
+                <p className="text-white/50 text-xs font-mono mt-0.5 flex items-center gap-1"><Fingerprint size={11} /> {(profile?.id || '').slice(0, 8).toUpperCase()}</p>
+              </div>
+            </div>
 
-          {!openEntry && (
-            <input value={note} onChange={e => setNote(e.target.value)} placeholder="What are you working on? (optional)"
-              className="mt-5 w-full max-w-sm mx-auto input text-center" />
-          )}
+            {/* Live timer */}
+            <div className="text-center mb-5">
+              <div className="text-5xl font-semibold tracking-tight tabular-nums">
+                {openEntry ? formatDuration(elapsedMs) : '00:00:00'}
+              </div>
+              {openEntry && (
+                <p className="text-white/70 text-sm mt-2">
+                  Since {formatTime(openEntry.clockIn)}
+                  {openEntry.studentId ? ` · with ${studentName(openEntry.studentId)}` : ''}
+                  {openEntry.note ? ` · ${openEntry.note}` : ''}
+                </p>
+              )}
+            </div>
 
-          <div className="mt-6">
-            {openEntry ? (
-              <button onClick={handleClockOut}
-                className="inline-flex items-center gap-2 bg-white text-violet-700 font-semibold px-8 py-3.5 rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                <Square size={18} className="fill-violet-700" /> Clock Out
-              </button>
-            ) : (
-              <button onClick={handleClockIn}
-                className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold px-8 py-3.5 rounded-full shadow-[0_4px_16px_rgba(124,58,237,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all">
-                <Play size={18} className="fill-white" /> Clock In
-              </button>
+            {/* Pre-clock-in: pick a student + note */}
+            {!openEntry && (
+              <div className="space-y-2 mb-4">
+                <select value={studentId} onChange={e => setStudentId(e.target.value)}
+                  className="w-full bg-white/15 border-0 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 [&>option]:text-gray-900">
+                  <option value="">General work (no specific student)</option>
+                  {myStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <input value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)"
+                  className="w-full bg-white/15 border-0 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40" />
+              </div>
             )}
+
+            {/* Big tap button */}
+            <button onClick={openEntry ? handleClockOut : handleClockIn}
+              className="w-full bg-white text-gray-900 font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-transform shadow-lg">
+              {openEntry ? <><Square size={18} className="fill-gray-900" /> Tap to clock out</> : <><Play size={18} className="fill-gray-900" /> Tap to clock in</>}
+            </button>
           </div>
         </div>
       </div>
@@ -162,7 +186,12 @@ export default function TimeClock() {
                       <p className="text-sm font-medium text-gray-900">
                         {formatTime(e.clockIn)} → {e.clockOut ? formatTime(e.clockOut) : <span className="text-green-600">in progress</span>}
                       </p>
-                      {e.note && <p className="text-xs text-gray-400 truncate">{e.note}</p>}
+                      {(e.studentId || e.note) && (
+                        <p className="text-xs text-gray-400 truncate">
+                          {e.studentId && <span className="text-violet-500 font-medium">{studentName(e.studentId)}</span>}
+                          {e.studentId && e.note ? ' · ' : ''}{e.note}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">

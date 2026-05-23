@@ -101,8 +101,8 @@ export function AppProvider({ children }) {
     const { data } = await supabase.from('time_entries').select('*').eq('user_id', user.id).is('clock_out', null).order('clock_in', { ascending: false }).limit(1).maybeSingle()
     return data ? camelize(data) : null
   }
-  async function clockIn(note = '') {
-    const { data } = await supabase.from('time_entries').insert({ user_id: user.id, note }).select().single()
+  async function clockIn(note = '', studentId = null) {
+    const { data } = await supabase.from('time_entries').insert({ user_id: user.id, note, student_id: studentId }).select().single()
     return data ? camelize(data) : null
   }
   async function clockOut(entryId) {

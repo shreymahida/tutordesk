@@ -8,17 +8,37 @@ export default function Settings() {
   const { profile, signOut, refreshProfile } = useAuth()
   const { mode, setMode, accent, setAccent, logoUrl, setLogoUrl } = useTheme()
   const [name, setName] = useState(profile?.name || '')
+  const [phone, setPhone] = useState(profile?.phone || '')
+  const [pronouns, setPronouns] = useState(profile?.pronouns || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const fileRef = useRef(null)
+  const avatarRef = useRef(null)
   const isAdmin = profile?.role === 'admin'
 
-  async function saveName() {
+  async function saveProfile() {
     setSaving(true)
-    await supabase.from('profiles').update({ name }).eq('id', profile.id)
+    await supabase.from('profiles').update({ name, phone, pronouns }).eq('id', profile.id)
     await refreshProfile?.()
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function uploadAvatar(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${profile.id}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+      await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', profile.id)
+      await refreshProfile?.()
+    }
+    setAvatarUploading(false)
+    e.target.value = ''
   }
 
   async function uploadLogo(e) {
@@ -53,19 +73,42 @@ export default function Settings() {
       <section className="card p-6">
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><User size={17} /> Profile</h2>
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-xl font-semibold">
-            {(profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
-          </div>
+          <button onClick={() => avatarRef.current?.click()} className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-2xl font-semibold overflow-hidden group">
+            {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" /> : (profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
+            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              {avatarUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+            </span>
+          </button>
+          <input ref={avatarRef} type="file" accept="image/*" onChange={uploadAvatar} className="hidden" />
           <div className="space-y-1 text-sm">
             <p className="flex items-center gap-2 text-gray-600"><Mail size={13} /> {profile?.email}</p>
             <p className="flex items-center gap-2 text-gray-600"><Shield size={13} /> <span className="capitalize">{profile?.role}</span></p>
+            <button onClick={() => avatarRef.current?.click()} className="text-xs text-violet-600 hover:underline">Change photo</button>
           </div>
         </div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Display name</label>
-        <div className="flex gap-2">
-          <input value={name} onChange={e => setName(e.target.value)} className="input flex-1" placeholder="Your name" />
-          <button onClick={saveName} disabled={saving} className="btn-primary whitespace-nowrap">
-            {saved ? <><Check size={15} /> Saved</> : 'Save'}
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Display name</label>
+            <input value={name} onChange={e => setName(e.target.value)} className="input" placeholder="Your name" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+              <input value={phone} onChange={e => setPhone(e.target.value)} className="input" placeholder="555-0100" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Pronouns</label>
+              <input value={pronouns} onChange={e => setPronouns(e.target.value)} className="input" placeholder="she/her, he/him, they/them" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <input value={profile?.email || ''} disabled className="input opacity-60 cursor-not-allowed" />
+            <p className="text-xs text-gray-400 mt-1">Email is tied to your login — contact your admin to change it.</p>
+          </div>
+          <button onClick={saveProfile} disabled={saving} className="btn-primary">
+            {saved ? <><Check size={15} /> Saved</> : 'Save profile'}
           </button>
         </div>
       </section>

@@ -1,10 +1,19 @@
+import { useState, useEffect } from 'react'
 import { useApp } from '../store'
 import { useAuth } from '../context/AuthContext'
-import { Video, Clock, CheckCircle, AlertCircle, ArrowRight, Sparkles } from 'lucide-react'
+import { Video, Clock, CheckCircle, AlertCircle, ArrowRight, Sparkles, Play, Square } from 'lucide-react'
 
 export default function TutorToday() {
   const { user } = useAuth()
-  const { sessions, students } = useApp()
+  const { sessions, students, clockIn, clockOut, getMyOpenEntry } = useApp()
+  const [openEntry, setOpenEntry] = useState(null)
+
+  useEffect(() => { getMyOpenEntry().then(setOpenEntry) }, [])
+
+  async function toggleClock(session) {
+    if (openEntry) { await clockOut(openEntry.id); setOpenEntry(null) }
+    else { const e = await clockIn('', session.studentId); setOpenEntry(e) }
+  }
 
   const today = new Date().toISOString().split('T')[0]
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
@@ -37,7 +46,7 @@ export default function TutorToday() {
       {/* Today */}
       <Section title="Today" empty={myToday.length === 0 ? "Nothing scheduled today." : null}>
         <div className="space-y-2">
-          {myToday.map(s => <SessionRow key={s.id} session={s} student={students.find(st => st.id === s.studentId)} highlight />)}
+          {myToday.map(s => <SessionRow key={s.id} session={s} student={students.find(st => st.id === s.studentId)} highlight openEntry={openEntry} onToggleClock={toggleClock} />)}
         </div>
       </Section>
 
@@ -45,7 +54,7 @@ export default function TutorToday() {
       {myTomorrow.length > 0 && (
         <Section title="Tomorrow">
           <div className="space-y-2">
-            {myTomorrow.map(s => <SessionRow key={s.id} session={s} student={students.find(st => st.id === s.studentId)} />)}
+            {myTomorrow.map(s => <SessionRow key={s.id} session={s} student={students.find(st => st.id === s.studentId)} openEntry={openEntry} onToggleClock={toggleClock} />)}
           </div>
         </Section>
       )}
@@ -80,40 +89,60 @@ function Section({ title, children, empty }) {
   )
 }
 
-function SessionRow({ session, student, highlight }) {
+function SessionRow({ session, student, highlight, openEntry, onToggleClock }) {
   const now = new Date()
   const sessionDt = new Date(session.date + 'T' + (session.time || '00:00'))
   const minsAway = Math.floor((sessionDt - now) / 60000)
   const isSoon = highlight && minsAway > 0 && minsAway < 60
   const isLive = highlight && minsAway <= 0 && minsAway > -session.duration
 
+  // Is the open shift for THIS student?
+  const clockedForThis = openEntry && openEntry.studentId === session.studentId
+  const clockedElsewhere = openEntry && openEntry.studentId !== session.studentId
+
   return (
-    <div className={`bg-white rounded-2xl border p-4 flex items-center justify-between gap-3 ${isLive ? 'border-green-300 ring-2 ring-green-100' : isSoon ? 'border-amber-200 ring-2 ring-amber-50' : 'border-gray-100'}`}>
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center ${isLive ? 'bg-green-100 text-green-700' : 'bg-violet-50 text-violet-700'}`}>
-          <span className="text-[10px] font-bold uppercase tracking-wider">{formatTime(session.time).replace(/[: ]/g, '').replace(/[ap]m/i, '')}</span>
-          <span className="text-[10px] font-bold">{formatTime(session.time).slice(-2)}</span>
+    <div className={`bg-white rounded-2xl border p-4 ${isLive ? 'border-green-300 ring-2 ring-green-100' : isSoon ? 'border-amber-200 ring-2 ring-amber-50' : 'border-gray-100'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center ${isLive ? 'bg-green-100 text-green-700' : 'bg-violet-50 text-violet-700'}`}>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{formatTime(session.time).replace(/[: ]/g, '').replace(/[ap]m/i, '')}</span>
+            <span className="text-[10px] font-bold">{formatTime(session.time).slice(-2)}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 truncate">{student?.name || 'Unknown'}</p>
+            <p className="text-xs text-gray-500">{session.subject} · {session.duration}min</p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-gray-900 truncate">{student?.name || 'Unknown'}</p>
-          <p className="text-xs text-gray-500">{session.subject} · {session.duration}min</p>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isLive && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> LIVE</span>}
+          {isSoon && !isLive && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">in {minsAway}min</span>}
+          {session.meetingLink ? (
+            <a href={session.meetingLink} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold transition-colors">
+              <Video size={13} /> Join
+            </a>
+          ) : (
+            <a href="https://meet.google.com/new" target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-medium transition-colors">
+              <Video size={13} /> New Meet
+            </a>
+          )}
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {isLive && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> LIVE</span>}
-        {isSoon && !isLive && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">in {minsAway}min</span>}
-        {session.meetingLink ? (
-          <a href={session.meetingLink} target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold transition-colors">
-            <Video size={13} /> Join
-          </a>
-        ) : (
-          <a href="https://meet.google.com/new" target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-medium transition-colors">
-            <Video size={13} /> New Meet
-          </a>
-        )}
-      </div>
+
+      {/* Clock-in shortcut for this specific student */}
+      <button
+        onClick={() => onToggleClock(session)}
+        disabled={clockedElsewhere}
+        className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+          clockedForThis ? 'bg-green-600 hover:bg-green-700 text-white'
+          : clockedElsewhere ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+          : 'bg-violet-50 hover:bg-violet-100 text-violet-700'
+        }`}>
+        {clockedForThis ? <><Square size={12} className="fill-white" /> Clock out of this session</>
+          : clockedElsewhere ? 'Clocked in elsewhere'
+          : <><Play size={12} className="fill-violet-700" /> Clock in for {student?.name?.split(' ')[0] || 'session'}</>}
+      </button>
     </div>
   )
 }
