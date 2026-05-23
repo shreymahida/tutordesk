@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import Papa from 'papaparse'
 import { useApp } from '../store'
 import { supabase } from '../lib/supabase'
-import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check, UserCheck } from 'lucide-react'
-import { COURSES } from '../data/ontarioCurriculum'
+import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check, UserCheck, Sparkles, GraduationCap } from 'lucide-react'
+import { COURSES, courseByCode } from '../data/ontarioCurriculum'
+import { PROGRAM_TARGETS, evaluateAdmission, STATUS_META } from '../data/admitCalculator'
+import LessonPlannerModal from './LessonPlannerModal'
 
 // Ontario course codes (primary) + generic fallbacks
 const ONTARIO_CODES = COURSES.map(c => `${c.code} — ${c.title} (Gr ${c.grade})`)
@@ -11,7 +13,7 @@ const GENERIC_SUBJECTS = ['Math', 'English', 'Physics', 'Chemistry', 'Biology', 
 const SUBJECTS = [...ONTARIO_CODES, ...GENERIC_SUBJECTS]
 const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'College', 'Adult']
 
-const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '', familyId: null, billingFrequency: 'per-session' }
+const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '', familyId: null, billingFrequency: 'per-session', targetProgram: '', courseMarks: {} }
 
 export default function Students() {
   const { students, addStudent, addStudents, updateStudent, deleteStudent, families, addFamily, assignments, assignStudent, unassignStudent } = useApp()
@@ -25,6 +27,7 @@ export default function Students() {
   const [shareModal, setShareModal] = useState(null)
   const [copiedToken, setCopiedToken] = useState(null)
   const [assignModal, setAssignModal] = useState(null)
+  const [plannerStudent, setPlannerStudent] = useState(null)
   const [tutors, setTutors] = useState([])
   const fileRef = useRef(null)
 
@@ -169,6 +172,9 @@ export default function Students() {
               <button onClick={() => setAssignModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
                 <UserCheck size={13} /> Tutors
               </button>
+              <button onClick={() => setPlannerStudent(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
+                <Sparkles size={13} /> AI Plan
+              </button>
               <button onClick={() => setShareModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
                 <Share2 size={13} /> Share
               </button>
@@ -247,6 +253,7 @@ export default function Students() {
               </select>
               <p className="text-xs text-gray-400 mt-1">Manage families separately to share one parent portal link for all siblings.</p>
             </Field>
+            <AcademicProfile form={form} setForm={setForm} />
             <Field label="Notes">
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input min-h-[80px] resize-none" placeholder="Any notes about this student..." />
             </Field>
@@ -325,6 +332,9 @@ export default function Students() {
         </Modal>
       )}
 
+      {/* AI Lesson Planner */}
+      {plannerStudent && <LessonPlannerModal student={plannerStudent} onClose={() => setPlannerStudent(null)} />}
+
       {/* Assign tutors modal */}
       {assignModal && (
         <Modal title={`Assign tutors to ${assignModal.name}`} onClose={() => setAssignModal(null)}>
@@ -398,6 +408,65 @@ function Field({ label, children }) {
     <div>
       <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
       {children}
+    </div>
+  )
+}
+
+function AcademicProfile({ form, setForm }) {
+  // Ontario course codes this student is tagged with
+  const codes = (form.subjects || []).map(s => s.split(' ')[0]).filter(c => courseByCode[c])
+  const result = form.targetProgram ? evaluateAdmission(form.courseMarks || {}, form.targetProgram) : null
+
+  function setMark(code, val) {
+    setForm(f => ({ ...f, courseMarks: { ...(f.courseMarks || {}), [code]: val === '' ? undefined : Number(val) } }))
+  }
+
+  return (
+    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
+      <p className="text-xs font-semibold text-gray-700 flex items-center gap-1.5"><GraduationCap size={13} /> University Pathway (Grade 11-12)</p>
+
+      <Field label="Target program">
+        <select value={form.targetProgram || ''} onChange={e => setForm(f => ({ ...f, targetProgram: e.target.value }))} className="input">
+          <option value="">No target set</option>
+          {PROGRAM_TARGETS.map(p => <option key={p.program} value={p.program}>{p.program} (~{p.avg}%)</option>)}
+        </select>
+      </Field>
+
+      {codes.length > 0 && (
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">Current marks</label>
+          <div className="grid grid-cols-2 gap-2">
+            {codes.map(c => (
+              <div key={c} className="flex items-center gap-2">
+                <span className="font-mono text-xs text-gray-600 w-16">{c}</span>
+                <input type="number" min="0" max="100"
+                  value={form.courseMarks?.[c] ?? ''} onChange={e => setMark(c, e.target.value)}
+                  className="input py-1.5 text-sm" placeholder="%" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className={`rounded-xl p-3 ring-1 ${STATUS_META[result.status].ring} bg-white`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_META[result.status].color}`}>{STATUS_META[result.status].label}</span>
+            {result.currentAvg != null && (
+              <span className="text-xs text-gray-500">{result.currentAvg}% / {result.targetAvg}% target</span>
+            )}
+          </div>
+          {result.gap != null && result.gap > 0 && (
+            <p className="text-xs text-gray-600">Needs <strong className="text-gray-900">+{result.gap}%</strong> to hit the competitive average for {result.program}.</p>
+          )}
+          {result.gap != null && result.gap <= 0 && (
+            <p className="text-xs text-green-700">On track for {result.program}. 🎯</p>
+          )}
+          {result.missingCourses.length > 0 && (
+            <p className="text-xs text-gray-500 mt-1">Missing marks for: <span className="font-mono">{result.missingCourses.join(', ')}</span></p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

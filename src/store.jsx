@@ -96,6 +96,28 @@ export function AppProvider({ children }) {
     setLeads(p => p.filter(x => x.id !== id))
   }
 
+  // ── Lesson plans ───────────────────────────────────────────────────────────
+  async function saveLessonPlan(plan) {
+    const row = snakify({ ...plan, tutorId: user.id })
+    const { data } = await supabase.from('lesson_plans').insert(row).select().single()
+    return data ? camelize(data) : null
+  }
+  async function getLessonPlans(studentId) {
+    const { data } = await supabase.from('lesson_plans').select('*').eq('student_id', studentId).order('created_at', { ascending: false })
+    return fromDB(data)
+  }
+  // Calls the AI lesson planner edge function
+  async function generateLessonPlan(payload) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lesson-planner`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify(payload),
+    })
+    return res.json()
+  }
+
   // ── Monthly invoicing ────────────────────────────────────────────────────
   // Find completed sessions for monthly-billing students in the given month
   // that don't yet have a payment, and create one bundled invoice per student.
@@ -258,6 +280,7 @@ export function AppProvider({ children }) {
       settings, updateSettings,
       assignments, assignStudent, unassignStudent,
       generateMonthlyInvoices,
+      saveLessonPlan, getLessonPlans, generateLessonPlan,
     }}>
       {children}
     </AppContext.Provider>

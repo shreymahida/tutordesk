@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useApp } from '../store'
 import { useAuth } from '../context/AuthContext'
-import { Search, User, Star, Plus, X, ChevronRight } from 'lucide-react'
+import { Search, User, Star, Plus, X, ChevronRight, Sparkles } from 'lucide-react'
+import LessonPlannerModal from '../components/LessonPlannerModal'
 
 export default function TutorStudents() {
   const { user } = useAuth()
@@ -92,6 +93,7 @@ export default function TutorStudents() {
 
 function StudentDetail({ student, sessions, notes, noteDraft, setNoteDraft, onSubmitNote, onBack }) {
   const completed = sessions.filter(s => s.status === 'completed').length
+  const [plannerOpen, setPlannerOpen] = useState(false)
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -100,16 +102,22 @@ function StudentDetail({ student, sessions, notes, noteDraft, setNoteDraft, onSu
       </button>
 
       {/* Student header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center gap-4">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center gap-4 flex-wrap">
         <div className="w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold">
           {student.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold text-gray-900">{student.name}</h1>
           <p className="text-sm text-gray-500">{student.grade} Grade · {student.subjects.join(', ')}</p>
           <p className="text-xs text-gray-400 mt-1">{completed} session{completed !== 1 ? 's' : ''} completed</p>
         </div>
+        <button onClick={() => setPlannerOpen(true)}
+          className="flex items-center gap-2 bg-gradient-to-br from-violet-500 to-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-shadow">
+          <Sparkles size={15} /> AI Lesson Plan
+        </button>
       </div>
+
+      {plannerOpen && <LessonPlannerModal student={student} onClose={() => setPlannerOpen(false)} />}
 
       {/* Quick note */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5">
