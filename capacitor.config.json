@@ -1,0 +1,17 @@
+{
+  "appId": "app.tutorhq.mobile",
+  "appName": "TutorHQ",
+  "webDir": "dist",
+  "server": {
+    "url": "https://tutordesk-eight.vercel.app",
+    "cleartext": false
+  },
+  "backgroundColor": "#fbfbfd",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#7c3aed",
+      "showSpinner": false
+    }
+  }
+}
