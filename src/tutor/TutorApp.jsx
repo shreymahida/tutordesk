@@ -7,18 +7,19 @@ import TutorCalendar from './TutorCalendar'
 import TutorStudents from './TutorStudents'
 import Messages from '../pages/Messages'
 import Curriculum from '../pages/Curriculum'
-import { Home, Calendar, CalendarDays, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen } from 'lucide-react'
+import TimeClock from '../pages/TimeClock'
+import { Home, Calendar, Clock, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const NAV = [
   { id: 'today', label: 'Today', icon: Home },
   { id: 'sessions', label: 'Sessions', icon: Calendar },
+  { id: 'timeclock', label: 'Clock', icon: Clock },
   { id: 'students', label: 'Students', icon: Users },
-  { id: 'curriculum', label: 'Resources', icon: BookOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
 ]
 
-const PAGES = { today: TutorToday, sessions: TutorSessions, calendar: TutorCalendar, students: TutorStudents, curriculum: Curriculum, messages: Messages }
+const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, curriculum: Curriculum, messages: Messages }
 
 export default function TutorApp() {
   const { profile, signOut } = useAuth()

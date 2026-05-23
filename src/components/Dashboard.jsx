@@ -23,10 +23,10 @@ export default function Dashboard() {
     .slice(0, 4)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back — here's your business at a glance.</p>
+        <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Welcome back</h1>
+        <p className="text-gray-500 text-[15px] mt-1.5">Here's your business at a glance.</p>
       </div>
 
       {/* Stats */}
@@ -40,7 +40,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue chart */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-6">
           <h2 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><TrendingUp size={16} /> Revenue (last 8 weeks)</h2>
           <p className="text-xs text-gray-400 mb-3">Paid invoices grouped by week</p>
           <ResponsiveContainer width="100%" height={200}>
@@ -55,7 +55,7 @@ export default function Dashboard() {
         </div>
 
         {/* Subject breakdown */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-6">
           <h2 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><Calendar size={16} /> Sessions by subject</h2>
           <p className="text-xs text-gray-400 mb-3">All-time count</p>
           {sessionsBySubject.length === 0 ? (
@@ -76,7 +76,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming sessions */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-6">
           <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Clock size={16} /> Upcoming Sessions</h2>
           {upcoming.length === 0 ? (
             <p className="text-gray-400 text-sm">No upcoming sessions scheduled.</p>
@@ -102,7 +102,7 @@ export default function Dashboard() {
         </div>
 
         {/* Pending payments */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-6">
           <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><DollarSign size={16} /> Pending Payments</h2>
           {pendingRevenue === 0 ? (
             <p className="text-gray-400 text-sm">All payments collected!</p>
@@ -133,17 +133,17 @@ export default function Dashboard() {
 
 function StatCard({ icon, label, value, color }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    violet: 'bg-violet-50 text-violet-600',
-    green: 'bg-green-50 text-green-600',
-    orange: 'bg-orange-50 text-orange-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
+    blue: 'from-blue-400 to-blue-600',
+    violet: 'from-violet-400 to-violet-600',
+    green: 'from-green-400 to-green-600',
+    orange: 'from-orange-400 to-orange-600',
+    emerald: 'from-emerald-400 to-emerald-600',
   }
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <div className={`inline-flex p-2 rounded-lg ${colors[color]} mb-3`}>{icon}</div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+    <div className="card p-5 hover:shadow-[0_4px_12px_rgba(17,24,39,0.08),0_16px_40px_rgba(17,24,39,0.08)] transition-shadow">
+      <div className={`inline-flex p-2.5 rounded-2xl bg-gradient-to-br ${colors[color]} text-white shadow-sm mb-4`}>{icon}</div>
+      <p className="text-3xl font-semibold text-gray-900 tracking-tight tabular-nums">{value}</p>
+      <p className="text-[13px] text-gray-500 mt-1">{label}</p>
     </div>
   )
 }

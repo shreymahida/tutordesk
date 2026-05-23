@@ -13,11 +13,12 @@ import Families from './pages/Families'
 import Leads from './pages/Leads'
 import Messages from './pages/Messages'
 import Curriculum from './pages/Curriculum'
+import TimeClock from './pages/TimeClock'
 import ParentPortal from './pages/ParentPortal'
 import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
 import TutorApp from './tutor/TutorApp'
-import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen } from 'lucide-react'
+import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +27,7 @@ const NAV = [
   { id: 'sessions', label: 'Sessions', icon: Calendar },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
+  { id: 'timeclock', label: 'Time Clock', icon: Clock },
   { id: 'payments', label: 'Payments', icon: DollarSign },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
@@ -33,7 +35,7 @@ const NAV = [
   { id: 'team', label: 'Team', icon: UserCircle2 },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, curriculum: Curriculum, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team }
+const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, curriculum: Curriculum, timeclock: TimeClock, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()

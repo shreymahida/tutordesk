@@ -96,6 +96,26 @@ export function AppProvider({ children }) {
     setLeads(p => p.filter(x => x.id !== id))
   }
 
+  // ── Time clock ─────────────────────────────────────────────────────────────
+  async function getMyOpenEntry() {
+    const { data } = await supabase.from('time_entries').select('*').eq('user_id', user.id).is('clock_out', null).order('clock_in', { ascending: false }).limit(1).maybeSingle()
+    return data ? camelize(data) : null
+  }
+  async function clockIn(note = '') {
+    const { data } = await supabase.from('time_entries').insert({ user_id: user.id, note }).select().single()
+    return data ? camelize(data) : null
+  }
+  async function clockOut(entryId) {
+    const { data } = await supabase.from('time_entries').update({ clock_out: new Date().toISOString() }).eq('id', entryId).select().single()
+    return data ? camelize(data) : null
+  }
+  async function getTimeEntries({ allUsers = false } = {}) {
+    let q = supabase.from('time_entries').select('*').order('clock_in', { ascending: false })
+    if (!allUsers) q = q.eq('user_id', user.id)
+    const { data } = await q.limit(200)
+    return fromDB(data)
+  }
+
   // ── Lesson plans ───────────────────────────────────────────────────────────
   async function saveLessonPlan(plan) {
     const row = snakify({ ...plan, tutorId: user.id })
@@ -281,6 +301,7 @@ export function AppProvider({ children }) {
       assignments, assignStudent, unassignStudent,
       generateMonthlyInvoices,
       saveLessonPlan, getLessonPlans, generateLessonPlan,
+      getMyOpenEntry, clockIn, clockOut, getTimeEntries,
     }}>
       {children}
     </AppContext.Provider>
