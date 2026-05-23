@@ -68,6 +68,9 @@ export default function FamilyPortal({ token }) {
           <Stat icon={<DollarSign size={16} />} label="Outstanding" value={`$${outstanding.toFixed(0)}`} color="amber" />
         </div>
 
+        {/* Referral card */}
+        {family.referralCode && <ReferralCard family={family} />}
+
         {/* Per-student accordion */}
         {students.length === 0 ? (
           <div className="card p-8 text-center text-gray-400">
@@ -172,6 +175,29 @@ export default function FamilyPortal({ token }) {
           )}
         </div>
       </main>
+    </div>
+  )
+}
+
+function ReferralCard({ family }) {
+  const [copied, setCopied] = useState(false)
+  const link = `${window.location.origin}/book?ref=${family.referralCode}`
+  function copy() { navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+  return (
+    <div className="rounded-3xl p-6 bg-gradient-to-br from-violet-600 to-violet-800 text-white relative overflow-hidden">
+      <div className="absolute top-[-20%] right-[-5%] w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+      <div className="relative">
+        <p className="text-violet-200 text-xs font-medium uppercase tracking-wider mb-1">Refer a friend</p>
+        <p className="text-xl font-bold mb-1">Give $50, get $50</p>
+        <p className="text-violet-100 text-sm mb-4">Share your code — when a friend signs up, you both get $50 in credit.</p>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-white/15 rounded-xl px-4 py-2.5 font-mono text-lg font-bold tracking-widest">{family.referralCode}</div>
+          <button onClick={copy} className="bg-white text-violet-700 font-semibold px-4 py-2.5 rounded-xl text-sm">
+            {copied ? 'Copied!' : 'Copy link'}
+          </button>
+        </div>
+        {family.referralCredit > 0 && <p className="text-violet-100 text-sm mt-3">You've earned <strong className="text-white">${Number(family.referralCredit).toFixed(0)}</strong> in credit so far. 🎉</p>}
+      </div>
     </div>
   )
 }

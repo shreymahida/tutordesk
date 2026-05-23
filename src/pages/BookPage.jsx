@@ -7,7 +7,8 @@ const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9t
 
 export default function BookPage() {
   const [settings, setSettings] = useState(null)
-  const [form, setForm] = useState({ parentName: '', parentEmail: '', parentPhone: '', studentName: '', studentGrade: '9th', subjects: [], message: '' })
+  const refFromUrl = new URLSearchParams(window.location.search).get('ref') || ''
+  const [form, setForm] = useState({ parentName: '', parentEmail: '', parentPhone: '', studentName: '', studentGrade: '9th', subjects: [], message: '', referralCode: refFromUrl })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -29,8 +30,19 @@ export default function BookPage() {
     if (!form.parentName || !form.parentEmail || !form.studentName) { setError('Please fill in all required fields.'); return }
     setSubmitting(true)
     setError('')
-    const { error: err } = await supabase.from('leads').insert(snakify(form))
+    const { referralCode, ...leadData } = form
+    const { error: err } = await supabase.from('leads').insert(snakify(leadData))
     if (err) { setError(err.message); setSubmitting(false); return }
+    // Record referral if a code was used
+    if (referralCode?.trim()) {
+      const { data: fam } = await supabase.from('families').select('id').eq('referral_code', referralCode.trim().toUpperCase()).maybeSingle()
+      await supabase.from('referrals').insert(snakify({
+        referrerFamily: fam?.id || null,
+        referredName: form.parentName,
+        referredEmail: form.parentEmail,
+        codeUsed: referralCode.trim().toUpperCase(),
+      }))
+    }
     setSubmitted(true)
     setSubmitting(false)
   }
@@ -118,6 +130,12 @@ export default function BookPage() {
             <label className="block text-xs font-medium text-gray-700 mb-1">Anything else we should know?</label>
             <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
               className="input min-h-[80px] resize-none" placeholder="Goals, schedule preferences, etc..." />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Referral code (optional)</label>
+            <input value={form.referralCode} onChange={e => setForm(f => ({ ...f, referralCode: e.target.value.toUpperCase() }))}
+              className="input uppercase font-mono tracking-widest" placeholder="Got a code from a friend?" />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, camelize } from '../lib/supabase'
 import { GraduationCap, Calendar, DollarSign, TrendingUp, Star, Loader2, FileText, Video } from 'lucide-react'
 import { exportProgressPDF } from '../lib/pdfReport'
+import Achievements from '../components/Achievements'
 
 export default function ParentPortal({ token }) {
   const [student, setStudent] = useState(null)
@@ -97,6 +98,9 @@ export default function ParentPortal({ token }) {
           <Stat icon={<DollarSign size={16} />} label="Paid" value={`$${totalPaid.toFixed(0)}`} color="emerald" />
           <Stat icon={<DollarSign size={16} />} label="Outstanding" value={`$${outstanding.toFixed(0)}`} color="amber" />
         </div>
+
+        {/* Achievements */}
+        <Achievements sessions={sessions} notes={notes} />
 
         {/* Upcoming */}
         <Section title="Upcoming Sessions">

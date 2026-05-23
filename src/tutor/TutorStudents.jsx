@@ -3,6 +3,7 @@ import { useApp } from '../store'
 import { useAuth } from '../context/AuthContext'
 import { Search, User, Star, Plus, X, ChevronRight, Sparkles } from 'lucide-react'
 import LessonPlannerModal from '../components/LessonPlannerModal'
+import Achievements from '../components/Achievements'
 
 export default function TutorStudents() {
   const { user } = useAuth()
@@ -118,6 +119,8 @@ function StudentDetail({ student, sessions, notes, noteDraft, setNoteDraft, onSu
       </div>
 
       {plannerOpen && <LessonPlannerModal student={student} onClose={() => setPlannerOpen(false)} />}
+
+      <Achievements sessions={sessions} notes={notes} />
 
       {/* Quick note */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5">
