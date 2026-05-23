@@ -1,6 +1,27 @@
 # TutorHQ Integration Guide
 
-Both integrations are **optional** — TutorHQ works fully without them. Add them when you're ready.
+All integrations are **optional** — TutorHQ works fully without them. Add them when you're ready.
+
+## 0. AI Lesson Planner (Claude)
+
+Powers the "AI Lesson Plan" button on every student. Generates Ontario-curriculum-aware lesson plans.
+
+### Setup (one-time, 10 min)
+
+1. Get an Anthropic API key at [console.anthropic.com](https://console.anthropic.com) → API Keys → Create. Add ~$5 credit (each plan costs ~$0.01-0.02).
+2. Install Supabase CLI (if not already): `brew install supabase/tap/supabase`
+3. Deploy + set the secret:
+```bash
+cd /Users/shreymahida/claudecode/tutor-app
+supabase login
+supabase link --project-ref zbjzquinotiepoqzuixh
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxxxx
+supabase functions deploy lesson-planner
+```
+
+That's it. The "AI Lesson Plan" button will start working. Until deployed, it shows a friendly "not configured yet" message.
+
+---
 
 ## 1. Stripe Payment Links (parents pay online)
 
