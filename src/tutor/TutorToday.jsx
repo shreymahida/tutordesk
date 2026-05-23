@@ -60,7 +60,7 @@ export default function TutorToday() {
       )}
 
       {myToday.length === 0 && myTomorrow.length === 0 && (
-        <div className="bg-gradient-to-br from-violet-50 to-blue-50 rounded-2xl p-8 text-center border border-violet-100">
+        <div className="bg-gray-50 rounded-2xl p-8 text-center border border-gray-100">
           <Sparkles size={28} className="mx-auto mb-2 text-violet-600" />
           <p className="font-semibold text-gray-900">All clear ahead</p>
           <p className="text-sm text-gray-500 mt-1">No sessions in the next 48 hours.</p>

@@ -109,7 +109,7 @@ export default function Whiteboard() {
           {boards.map(b => (
             <div key={b.id} className="card p-5">
               <button onClick={() => setOpenBoard(b)} className="w-full text-left">
-                <div className="h-28 rounded-2xl bg-gradient-to-br from-violet-50 to-blue-50 border border-gray-100 flex items-center justify-center mb-3">
+                <div className="h-28 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-3">
                   <PenTool size={28} className="text-violet-300" />
                 </div>
                 <p className="font-semibold text-gray-900 truncate">{b.name}</p>
