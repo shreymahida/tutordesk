@@ -3,8 +3,12 @@ import Papa from 'papaparse'
 import { useApp } from '../store'
 import { supabase } from '../lib/supabase'
 import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check, UserCheck } from 'lucide-react'
+import { COURSES } from '../data/ontarioCurriculum'
 
-const SUBJECTS = ['Math', 'Algebra', 'Geometry', 'Calculus', 'Physics', 'Chemistry', 'Biology', 'English', 'Writing', 'History', 'SAT Prep', 'ACT Prep', 'Spanish', 'French', 'Computer Science']
+// Ontario course codes (primary) + generic fallbacks
+const ONTARIO_CODES = COURSES.map(c => `${c.code} — ${c.title} (Gr ${c.grade})`)
+const GENERIC_SUBJECTS = ['Math', 'English', 'Physics', 'Chemistry', 'Biology', 'French', 'Computer Science', 'SAT Prep', 'Other']
+const SUBJECTS = [...ONTARIO_CODES, ...GENERIC_SUBJECTS]
 const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'College', 'Adult']
 
 const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '', familyId: null, billingFrequency: 'per-session' }
