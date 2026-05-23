@@ -91,15 +91,17 @@ export default function TutorApp() {
           ))}
         </nav>
         <div className="p-4">
-          <div className="flex items-center gap-2.5 mb-2 px-1">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-xs font-semibold">
-              {(profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-900 truncate">{profile?.name || profile?.email}</p>
-              <p className="text-xs text-gray-400">Tutor</p>
-            </div>
-            <button onClick={toggleMode} className="ml-auto w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-500/10 text-gray-400">
+          <div className={`flex items-center gap-2.5 mb-2 p-2 rounded-2xl transition-colors ${page === 'settings' ? 'bg-violet-600' : ''}`}>
+            <button onClick={() => go('settings')} className="flex items-center gap-2.5 min-w-0 flex-1 text-left">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-xs font-semibold">
+                {(profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className={`text-xs font-semibold truncate ${page === 'settings' ? 'text-white' : 'text-gray-900'}`}>{profile?.name || profile?.email}</p>
+                <p className={`text-xs ${page === 'settings' ? 'text-violet-200' : 'text-gray-400'}`}>Tutor</p>
+              </div>
+            </button>
+            <button onClick={toggleMode} className={`w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-500/10 ${page === 'settings' ? 'text-violet-100' : 'text-gray-400'}`}>
               {mode === 'light' ? <Moon size={14} /> : <Sun size={14} />}
             </button>
           </div>

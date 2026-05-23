@@ -99,15 +99,17 @@ function MainApp() {
         </nav>
 
         <div className="p-4 mt-2">
-          <div className="flex items-center gap-2.5 mb-2 px-1">
+          <button onClick={() => navigate('settings')}
+            className={`w-full flex items-center gap-2.5 mb-2 p-2 rounded-2xl transition-colors ${page === 'settings' ? 'bg-violet-600' : 'hover:bg-gray-500/8'}`}>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-xs font-semibold">
               {(profile?.name || profile?.email || '?').slice(0, 2).toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-900 truncate">{profile?.name || profile?.email}</p>
-              <p className="text-xs text-gray-400 capitalize">{profile?.role}</p>
+            <div className="min-w-0 text-left flex-1">
+              <p className={`text-xs font-semibold truncate ${page === 'settings' ? 'text-white' : 'text-gray-900'}`}>{profile?.name || profile?.email}</p>
+              <p className={`text-xs capitalize ${page === 'settings' ? 'text-violet-200' : 'text-gray-400'}`}>{profile?.role}</p>
             </div>
-          </div>
+            <SettingsIcon size={14} className={page === 'settings' ? 'text-white' : 'text-gray-400'} />
+          </button>
           <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
             <LogOut size={13} /> Sign out
           </button>
