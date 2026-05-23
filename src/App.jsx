@@ -21,6 +21,7 @@ import { useTheme } from './context/ThemeContext'
 import ParentPortal from './pages/ParentPortal'
 import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
+import BoardRoom from './pages/BoardRoom'
 import TutorApp from './tutor/TutorApp'
 import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon } from 'lucide-react'
 
@@ -161,6 +162,8 @@ function PublicRouter() {
   if (parentMatch) return <ParentPortal token={parentMatch[1]} />
   const familyMatch = path.match(/^\/family\/([0-9a-fA-F-]{36})\/?$/)
   if (familyMatch) return <FamilyPortal token={familyMatch[1]} />
+  const boardMatch = path.match(/^\/board\/([a-z0-9-]+)\/?$/i)
+  if (boardMatch) return <BoardRoom roomId={boardMatch[1]} />
   if (path === '/book' || path === '/book/') return <BookPage />
   return null
 }

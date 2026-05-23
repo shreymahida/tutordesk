@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    'process.env.IS_PREACT': JSON.stringify('false'),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -24,6 +27,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         navigateFallbackDenylist: [/^\/parent\//, /^\/book\//, /^\/family\//],
       },
