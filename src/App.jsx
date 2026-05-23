@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { AppProvider, useApp } from './store'
 import Login from './pages/Login'
 import Dashboard from './components/Dashboard'
@@ -14,11 +15,14 @@ import Leads from './pages/Leads'
 import Messages from './pages/Messages'
 import Curriculum from './pages/Curriculum'
 import TimeClock from './pages/TimeClock'
+import Settings from './pages/Settings'
+import Whiteboard from './pages/Whiteboard'
+import { useTheme } from './context/ThemeContext'
 import ParentPortal from './pages/ParentPortal'
 import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
 import TutorApp from './tutor/TutorApp'
-import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock } from 'lucide-react'
+import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +30,7 @@ const NAV = [
   { id: 'families', label: 'Families', icon: Users2 },
   { id: 'sessions', label: 'Sessions', icon: Calendar },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+  { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
   { id: 'timeclock', label: 'Time Clock', icon: Clock },
   { id: 'payments', label: 'Payments', icon: DollarSign },
@@ -33,9 +38,10 @@ const NAV = [
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'leads', label: 'Leads', icon: Inbox },
   { id: 'team', label: 'Team', icon: UserCircle2 },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, curriculum: Curriculum, timeclock: TimeClock, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team }
+const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, whiteboard: Whiteboard, curriculum: Curriculum, timeclock: TimeClock, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team, settings: Settings }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()
@@ -44,6 +50,7 @@ function MainApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const Page = PAGES[page]
 
+  const { mode, toggleMode } = useTheme()
   const visibleNav = NAV.filter(n => (n.id !== 'team' && n.id !== 'leads') || isAdmin)
 
   function navigate(id) { setPage(id); setSidebarOpen(false) }
@@ -113,6 +120,10 @@ function MainApp() {
             <Menu size={20} />
           </button>
           <h1 className="font-semibold text-gray-900 capitalize tracking-tight">{page}</h1>
+          <button onClick={toggleMode} title="Toggle theme"
+            className="ml-auto w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-500/10 text-gray-500 transition-colors">
+            {mode === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+          </button>
         </header>
         <main className="flex-1 p-5 lg:p-8 fade-in" key={page}>
           <Page />
@@ -154,10 +165,13 @@ function PublicRouter() {
 
 export default function App() {
   const publicPage = PublicRouter()
-  if (publicPage) return publicPage
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <ThemeProvider>
+      {publicPage || (
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      )}
+    </ThemeProvider>
   )
 }
