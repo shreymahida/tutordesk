@@ -41,7 +41,7 @@ export default function BookPage() {
   if (settings && !settings.bookingEnabled) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md text-center">
+        <div className="card p-8 max-w-md text-center">
           <p className="text-gray-900 font-semibold mb-2">Booking closed</p>
           <p className="text-gray-500 text-sm">Public booking isn't enabled right now. Reach out directly.</p>
         </div>
@@ -52,7 +52,7 @@ export default function BookPage() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md text-center">
+        <div className="card p-8 max-w-md text-center">
           <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={28} className="text-green-600" />
           </div>
@@ -71,14 +71,14 @@ export default function BookPage() {
           <div className="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
             <GraduationCap size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{settings?.businessName || 'TutorHQ'}</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">{settings?.businessName || 'TutorHQ'}</h1>
           <p className="text-gray-500 text-sm mt-1">Request a tutoring session</p>
           {settings?.bookingBlurb && (
             <p className="text-gray-600 text-sm mt-4 max-w-md mx-auto">{settings.bookingBlurb}</p>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 space-y-4">
+        <form onSubmit={handleSubmit} className="card shadow-sm p-8 space-y-4">
           <h2 className="font-semibold text-gray-900 mb-2">Tell us about your child</h2>
 
           <Section label="Parent / guardian info">

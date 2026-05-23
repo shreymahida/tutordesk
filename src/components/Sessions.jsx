@@ -81,7 +81,7 @@ export default function Sessions() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Sessions</h1>
           <p className="text-gray-500 text-sm mt-1">{sessions.length} session{sessions.length !== 1 ? 's' : ''} total</p>
         </div>
         <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -102,7 +102,7 @@ export default function Sessions() {
         {filtered.map(s => {
           const student = students.find(st => st.id === s.studentId)
           return (
-            <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow">
+            <div key={s.id} className="card p-4 hover:shadow-sm transition-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex gap-4 items-start">
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-violet-50 flex flex-col items-center justify-center">

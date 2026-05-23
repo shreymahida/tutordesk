@@ -42,7 +42,7 @@ export default function Leads() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Leads</h1>
           <p className="text-gray-500 text-sm mt-1">Inquiries from your public booking page</p>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default function Leads() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <Inbox size={32} className="mx-auto mb-2 opacity-30" />

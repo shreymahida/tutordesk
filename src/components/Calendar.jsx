@@ -59,7 +59,7 @@ export default function Calendar() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Calendar</h1>
           <p className="text-gray-500 text-sm mt-1">Monthly view of all sessions</p>
         </div>
         <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="grid grid-cols-7 border-b border-gray-100">
           {WEEKDAYS.map(d => (
             <div key={d} className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">{d}</div>
@@ -128,7 +128,7 @@ export default function Calendar() {
 
       {/* Selected day detail */}
       {selected && selected.sessions.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-5">
           <h2 className="font-semibold text-gray-900 mb-4">
             {new Date(selected.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </h2>

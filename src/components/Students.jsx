@@ -111,7 +111,7 @@ export default function Students() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Students</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Students</h1>
           <p className="text-gray-500 text-sm mt-1">{students.length} student{students.length !== 1 ? 's' : ''} total</p>
         </div>
         <div className="flex gap-2">
@@ -137,7 +137,7 @@ export default function Students() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map(s => (
-          <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+          <div key={s.id} className="card p-5 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-semibold text-sm">

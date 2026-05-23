@@ -41,7 +41,7 @@ export default function ParentPortal({ token }) {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md text-center">
+        <div className="card p-8 max-w-md text-center">
           <p className="text-gray-900 font-semibold mb-2">Link not found</p>
           <p className="text-gray-500 text-sm">{error}</p>
         </div>
@@ -78,7 +78,7 @@ export default function ParentPortal({ token }) {
 
       <main className="max-w-4xl mx-auto px-4 lg:px-6 py-8 space-y-6">
         {/* Student hero */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="card p-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold">
               {student.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -168,7 +168,7 @@ export default function ParentPortal({ token }) {
 
 function Section({ title, children }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div className="card p-5">
       <h2 className="font-semibold text-gray-900 mb-3">{title}</h2>
       {children}
     </div>
@@ -183,7 +183,7 @@ function Stat({ icon, label, value, color }) {
     amber: 'bg-amber-50 text-amber-600',
   }
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="card p-4">
       <div className={`inline-flex p-1.5 rounded-lg ${colors[color]} mb-2`}>{icon}</div>
       <p className="text-xl font-bold text-gray-900">{value}</p>
       <p className="text-xs text-gray-500">{label}</p>

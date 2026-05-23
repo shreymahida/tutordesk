@@ -22,7 +22,7 @@ export default function Curriculum() {
   return (
     <div className="space-y-5 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Ontario Curriculum</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Ontario Curriculum</h1>
         <p className="text-gray-500 text-sm mt-1">Course codes, prerequisites, university requirements & resources</p>
       </div>
 

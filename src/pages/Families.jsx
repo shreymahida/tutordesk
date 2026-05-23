@@ -37,7 +37,7 @@ export default function Families() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Families</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Families</h1>
           <p className="text-gray-500 text-sm mt-1">Group siblings under one parent contact</p>
         </div>
         <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -49,7 +49,7 @@ export default function Families() {
         {families.map(f => {
           const siblings = siblingsOf(f.id)
           return (
-            <div key={f.id} className="bg-white rounded-xl border border-gray-200 p-5">
+            <div key={f.id} className="card p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-700">

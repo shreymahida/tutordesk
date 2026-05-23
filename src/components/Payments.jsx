@@ -58,7 +58,7 @@ export default function Payments() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Payments</h1>
           <p className="text-gray-500 text-sm mt-1">{payments.length} payment record{payments.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
@@ -94,7 +94,7 @@ export default function Payments() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 text-left text-xs text-gray-500 uppercase tracking-wide">

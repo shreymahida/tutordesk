@@ -47,7 +47,7 @@ export default function Team() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Team</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Team</h1>
           <p className="text-gray-500 text-sm mt-1">{profiles.length} team member{profiles.length !== 1 ? 's' : ''}</p>
         </div>
         {isAdmin && (
@@ -77,7 +77,7 @@ export default function Team() {
       </div>
 
       {/* Team list */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         {loading ? (
           <div className="text-center py-12 text-gray-400">
             <RefreshCw size={20} className="mx-auto mb-2 animate-spin opacity-40" />

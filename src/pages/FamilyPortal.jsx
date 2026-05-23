@@ -70,7 +70,7 @@ export default function FamilyPortal({ token }) {
 
         {/* Per-student accordion */}
         {students.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+          <div className="card p-8 text-center text-gray-400">
             No students linked to this family yet.
           </div>
         ) : (
@@ -81,7 +81,7 @@ export default function FamilyPortal({ token }) {
               const stNotes = notes.filter(n => n.studentId === student.id)
               const stUpcoming = stSessions.filter(s => s.date >= today && s.status === 'scheduled')
               return (
-                <div key={student.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div key={student.id} className="card overflow-hidden">
                   <button
                     onClick={() => setExpandedId(isOpen ? null : student.id)}
                     className="w-full flex items-center justify-between p-4 hover:bg-gray-50">
@@ -143,7 +143,7 @@ export default function FamilyPortal({ token }) {
         )}
 
         {/* Payments */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="card p-5">
           <h2 className="font-semibold text-gray-900 mb-3">Invoices</h2>
           {payments.length === 0 ? <Empty text="No invoices yet." /> : (
             <ul className="divide-y divide-gray-100">
@@ -180,12 +180,12 @@ function FullScreenLoader() {
   return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 size={28} className="text-violet-600 animate-spin" /></div>
 }
 function FullScreenError({ text }) {
-  return <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md text-center"><p className="text-gray-900 font-semibold mb-2">Link not found</p><p className="text-gray-500 text-sm">{text}</p></div></div>
+  return <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4"><div className="card p-8 max-w-md text-center"><p className="text-gray-900 font-semibold mb-2">Link not found</p><p className="text-gray-500 text-sm">{text}</p></div></div>
 }
 function Section({ title, children }) { return <div><h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{title}</h3>{children}</div> }
 function Stat({ icon, label, value, color }) {
   const colors = { violet: 'bg-violet-50 text-violet-600', blue: 'bg-blue-50 text-blue-600', amber: 'bg-amber-50 text-amber-600' }
-  return <div className="bg-white rounded-xl border border-gray-200 p-4"><div className={`inline-flex p-1.5 rounded-lg ${colors[color]} mb-2`}>{icon}</div><p className="text-xl font-bold text-gray-900">{value}</p><p className="text-xs text-gray-500">{label}</p></div>
+  return <div className="card p-4"><div className={`inline-flex p-1.5 rounded-lg ${colors[color]} mb-2`}>{icon}</div><p className="text-xl font-bold text-gray-900">{value}</p><p className="text-xs text-gray-500">{label}</p></div>
 }
 function Empty({ text }) { return <p className="text-sm text-gray-400">{text}</p> }
 function StarRating({ value }) { return <div className="flex gap-0.5">{[1,2,3,4,5].map(s => <Star key={s} size={10} className={s <= value ? 'fill-amber-400 text-amber-400' : 'text-gray-200'} />)}</div> }

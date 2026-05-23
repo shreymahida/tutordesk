@@ -41,7 +41,7 @@ export default function Progress() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Progress</h1>
           <p className="text-gray-500 text-sm mt-1">Track student progress over time</p>
         </div>
         <div className="flex gap-2">
@@ -84,7 +84,7 @@ export default function Progress() {
         {filtered.map(note => {
           const student = students.find(s => s.id === note.studentId)
           return (
-            <div key={note.id} className="bg-white rounded-xl border border-gray-200 p-5">
+            <div key={note.id} className="card p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex gap-3 items-start">
                   <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-semibold text-xs flex-shrink-0">
