@@ -1,43 +1,100 @@
 @import "tailwindcss";
 
+/* ─── Design tokens (Apple-inspired, tutoring-warm) ─────────────────────────── */
+@theme {
+  --color-canvas: #fbfbfd;
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #6e6e73;
+
+  /* Refined brand violet — slightly deeper, less neon */
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+
+  --shadow-soft: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 12px rgba(17, 24, 39, 0.04);
+  --shadow-card: 0 1px 3px rgba(17, 24, 39, 0.06), 0 8px 24px rgba(17, 24, 39, 0.05);
+  --shadow-lift: 0 4px 12px rgba(17, 24, 39, 0.08), 0 16px 40px rgba(17, 24, 39, 0.08);
+
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-tap-highlight-color: transparent; }
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color: #111827;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    letter-spacing: -0.011em;
+    text-rendering: optimizeLegibility;
   }
   #root { min-height: 100vh; }
 
-  /* Smoother scrollbars */
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  /* Tight, elegant headings — the single biggest "Apple" signal */
+  h1, h2, h3 { letter-spacing: -0.022em; font-weight: 600; }
+  h1 { letter-spacing: -0.03em; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+  ::-webkit-scrollbar-thumb { background: #d8d8dc; border-radius: 6px; border: 2px solid var(--color-canvas); }
+  ::-webkit-scrollbar-thumb:hover { background: #c4c4c9; }
+
+  ::selection { background: var(--color-brand-200); color: var(--color-brand-700); }
 }
 
 @layer components {
   .input {
-    @apply w-full bg-gray-50 border border-transparent rounded-xl px-3.5 py-2.5 text-sm
-           focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 focus:bg-white
-           transition-all placeholder-gray-400;
+    @apply w-full bg-gray-50 border border-transparent rounded-2xl px-4 py-2.5 text-sm
+           text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 focus:bg-white
+           transition-all duration-150;
   }
 
-  /* Smooth fade-in animation for page transitions */
-  .fade-in {
-    animation: fadeIn 0.18s ease-out;
+  /* Premium card — soft layered shadow, no harsh border */
+  .card {
+    @apply bg-white rounded-3xl shadow-[0_1px_3px_rgba(17,24,39,0.06),0_8px_24px_rgba(17,24,39,0.05)]
+           border border-gray-100/60;
   }
+
+  /* Frosted bar (headers / sidebars) */
+  .frosted {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  /* Pill primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700
+           text-white font-medium rounded-full px-5 py-2.5 text-sm
+           shadow-[0_1px_2px_rgba(124,58,237,0.3),0_4px_12px_rgba(124,58,237,0.2)]
+           hover:shadow-[0_2px_4px_rgba(124,58,237,0.35),0_8px_20px_rgba(124,58,237,0.25)]
+           active:scale-[0.98] transition-all duration-150;
+  }
+
+  .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  .scale-in { animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
   }
 }
 
-/* Override harsh chrome from print/PDF */
 @media print {
-  aside, header { display: none !important; }
+  aside, header, nav { display: none !important; }
   main { padding: 0 !important; }
 }

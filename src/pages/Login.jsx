@@ -31,15 +31,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'var(--color-canvas)' }}>
+      {/* Ambient gradient orbs */}
+      <div className="absolute top-[-10%] left-[15%] w-96 h-96 bg-violet-300/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[10%] w-80 h-80 bg-blue-300/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md relative scale-in">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
-            <GraduationCap size={28} className="text-white" />
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-violet-700 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-[0_8px_24px_rgba(124,58,237,0.35)]">
+            <GraduationCap size={32} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">TutorHQ</h1>
-          <p className="text-gray-500 text-sm mt-1">Business Manager</p>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">TutorHQ</h1>
+          <p className="text-gray-500 text-[15px] mt-1.5">Run your tutoring business, beautifully.</p>
         </div>
 
         {!isConfigured && (
@@ -49,8 +53,8 @@ export default function Login() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-[0_4px_12px_rgba(17,24,39,0.06),0_16px_48px_rgba(17,24,39,0.08)] p-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 tracking-tight">
             {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
           </h2>
 
@@ -110,7 +114,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white rounded-lg text-sm font-medium transition-colors mt-2">
+              className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white rounded-full text-sm font-medium mt-2 shadow-[0_2px_8px_rgba(124,58,237,0.3)] hover:shadow-[0_4px_16px_rgba(124,58,237,0.4)] active:scale-[0.98] transition-all duration-150">
               {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
