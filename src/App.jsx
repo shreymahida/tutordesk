@@ -11,10 +11,12 @@ import Progress from './components/Progress'
 import Team from './pages/Team'
 import Families from './pages/Families'
 import Leads from './pages/Leads'
+import Messages from './pages/Messages'
 import ParentPortal from './pages/ParentPortal'
 import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
-import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox } from 'lucide-react'
+import TutorApp from './tutor/TutorApp'
+import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,11 +26,12 @@ const NAV = [
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'payments', label: 'Payments', icon: DollarSign },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
+  { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'leads', label: 'Leads', icon: Inbox },
   { id: 'team', label: 'Team', icon: UserCircle2 },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, payments: Payments, progress: Progress, leads: Leads, team: Team }
+const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()
@@ -116,7 +119,7 @@ function MainApp() {
 }
 
 function AppShell() {
-  const { user, loading } = useAuth()
+  const { user, profile, loading, isAdmin } = useAuth()
 
   if (loading) {
     return (
@@ -130,7 +133,7 @@ function AppShell() {
 
   return (
     <AppProvider>
-      <MainApp />
+      {isAdmin ? <MainApp /> : <TutorApp />}
     </AppProvider>
   )
 }

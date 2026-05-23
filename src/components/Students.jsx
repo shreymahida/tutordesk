@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Papa from 'papaparse'
 import { useApp } from '../store'
-import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { Plus, Edit2, Trash2, X, Search, User, Upload, Share2, Copy, Check, UserCheck } from 'lucide-react'
 
 const SUBJECTS = ['Math', 'Algebra', 'Geometry', 'Calculus', 'Physics', 'Chemistry', 'Biology', 'English', 'Writing', 'History', 'SAT Prep', 'ACT Prep', 'Spanish', 'French', 'Computer Science']
 const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'College', 'Adult']
@@ -9,7 +10,7 @@ const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9t
 const BLANK = { name: '', email: '', phone: '', grade: '9th', subjects: [], rate: '', status: 'active', notes: '', familyId: null, billingFrequency: 'per-session' }
 
 export default function Students() {
-  const { students, addStudent, addStudents, updateStudent, deleteStudent, families, addFamily } = useApp()
+  const { students, addStudent, addStudents, updateStudent, deleteStudent, families, addFamily, assignments, assignStudent, unassignStudent } = useApp()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(BLANK)
@@ -19,7 +20,13 @@ export default function Students() {
   const [importError, setImportError] = useState('')
   const [shareModal, setShareModal] = useState(null)
   const [copiedToken, setCopiedToken] = useState(null)
+  const [assignModal, setAssignModal] = useState(null)
+  const [tutors, setTutors] = useState([])
   const fileRef = useRef(null)
+
+  useEffect(() => {
+    supabase.from('profiles').select('*').then(({ data }) => setTutors(data || []))
+  }, [])
 
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -151,14 +158,17 @@ export default function Students() {
               </div>
             )}
 
-            <div className="flex gap-2 pt-3 border-t border-gray-100">
-              <button onClick={() => openEdit(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors">
+            <div className="flex flex-wrap gap-1 pt-3 border-t border-gray-100">
+              <button onClick={() => openEdit(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
                 <Edit2 size={13} /> Edit
               </button>
-              <button onClick={() => setShareModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors">
+              <button onClick={() => setAssignModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
+                <UserCheck size={13} /> Tutors
+              </button>
+              <button onClick={() => setShareModal(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-violet-600 hover:bg-violet-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
                 <Share2 size={13} /> Share
               </button>
-              <button onClick={() => setConfirmDelete(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 py-1.5 rounded-lg transition-colors">
+              <button onClick={() => setConfirmDelete(s)} className="flex-1 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 py-1.5 rounded-lg transition-colors min-w-[60px]">
                 <Trash2 size={13} /> Delete
               </button>
             </div>
@@ -308,6 +318,37 @@ export default function Students() {
               </div>
             </>
           )}
+        </Modal>
+      )}
+
+      {/* Assign tutors modal */}
+      {assignModal && (
+        <Modal title={`Assign tutors to ${assignModal.name}`} onClose={() => setAssignModal(null)}>
+          <p className="text-sm text-gray-600 mb-4">
+            Pick which tutors can see this student in their portal. Tutors automatically see any student they have sessions with too.
+          </p>
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {tutors.filter(t => t.role === 'tutor').map(t => {
+              const isAssigned = assignments.some(a => a.studentId === assignModal.id && a.tutorId === t.id)
+              return (
+                <button key={t.id}
+                  onClick={() => isAssigned ? unassignStudent(assignModal.id, t.id) : assignStudent(assignModal.id, t.id)}
+                  className={`w-full p-3 rounded-xl border-2 transition-colors flex items-center gap-3 text-left ${isAssigned ? 'border-violet-400 bg-violet-50' : 'border-gray-100 hover:border-violet-200'}`}>
+                  <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-semibold text-xs">
+                    {(t.name || t.email).slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-gray-900 truncate">{t.name || t.email}</p>
+                    <p className="text-xs text-gray-500 truncate">{t.email}</p>
+                  </div>
+                  {isAssigned && <Check size={16} className="text-violet-600 flex-shrink-0" />}
+                </button>
+              )
+            })}
+            {tutors.filter(t => t.role === 'tutor').length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-6">No tutors yet. Invite one from the Team page.</p>
+            )}
+          </div>
         </Modal>
       )}
 

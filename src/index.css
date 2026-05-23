@@ -2,12 +2,42 @@
 
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #111827;
+  }
   #root { min-height: 100vh; }
+
+  /* Smoother scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
 }
 
 @layer components {
   .input {
-    @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 transition-colors;
+    @apply w-full bg-gray-50 border border-transparent rounded-xl px-3.5 py-2.5 text-sm
+           focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 focus:bg-white
+           transition-all placeholder-gray-400;
   }
+
+  /* Smooth fade-in animation for page transitions */
+  .fade-in {
+    animation: fadeIn 0.18s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Override harsh chrome from print/PDF */
+@media print {
+  aside, header { display: none !important; }
+  main { padding: 0 !important; }
 }

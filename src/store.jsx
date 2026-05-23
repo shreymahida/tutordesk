@@ -15,6 +15,7 @@ export function AppProvider({ children }) {
   const [families, setFamilies] = useState([])
   const [leads, setLeads] = useState([])
   const [settings, setSettings] = useState(null)
+  const [assignments, setAssignments] = useState([])
   const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
@@ -33,8 +34,24 @@ export function AppProvider({ children }) {
 
   async function loadAll() {
     setDataLoading(true)
-    await Promise.all([loadStudents(), loadSessions(), loadPayments(), loadProgressNotes(), loadFamilies(), loadLeads(), loadSettings()])
+    // RLS handles tutor scoping — tutors will get empty/filtered results automatically
+    // and won't see payments/leads/families at all.
+    await Promise.all([loadStudents(), loadSessions(), loadProgressNotes(), loadAssignments(), loadPayments(), loadFamilies(), loadLeads(), loadSettings()])
     setDataLoading(false)
+  }
+
+  async function loadAssignments() {
+    const { data } = await supabase.from('student_assignments').select('*')
+    setAssignments(fromDB(data))
+  }
+  async function assignStudent(studentId, tutorId) {
+    const { data, error } = await supabase.from('student_assignments').insert({ student_id: studentId, tutor_id: tutorId }).select().single()
+    if (!error && data) setAssignments(p => [...p, camelize(data)])
+    return error
+  }
+  async function unassignStudent(studentId, tutorId) {
+    await supabase.from('student_assignments').delete().eq('student_id', studentId).eq('tutor_id', tutorId)
+    setAssignments(p => p.filter(a => !(a.studentId === studentId && a.tutorId === tutorId)))
   }
 
   async function loadFamilies() {
@@ -239,6 +256,7 @@ export function AppProvider({ children }) {
       families, addFamily, updateFamily, deleteFamily,
       leads, updateLead, deleteLead,
       settings, updateSettings,
+      assignments, assignStudent, unassignStudent,
       generateMonthlyInvoices,
     }}>
       {children}
