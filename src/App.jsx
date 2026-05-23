@@ -50,7 +50,7 @@ function MainApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const Page = PAGES[page]
 
-  const { mode, toggleMode } = useTheme()
+  const { mode, toggleMode, logoUrl } = useTheme()
   const visibleNav = NAV.filter(n => (n.id !== 'team' && n.id !== 'leads') || isAdmin)
 
   function navigate(id) { setPage(id); setSidebarOpen(false) }
@@ -75,8 +75,8 @@ function MainApp() {
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 frosted border-r border-gray-200/60 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="px-5 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-violet-700 rounded-2xl flex items-center justify-center shadow-[0_2px_8px_rgba(124,58,237,0.3)]">
-              <GraduationCap size={18} className="text-white" />
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-violet-700 rounded-2xl flex items-center justify-center shadow-[0_2px_8px_rgba(124,58,237,0.3)] overflow-hidden">
+              {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : <GraduationCap size={18} className="text-white" />}
             </div>
             <div>
               <p className="font-semibold text-gray-900 text-[15px] leading-tight tracking-tight">TutorHQ</p>

@@ -65,9 +65,13 @@
   }
   #root { min-height: 100vh; }
 
-  /* Tight, elegant headings — the single biggest "Apple" signal */
+  /* Bold, elegant headings — Apple-grade hierarchy */
   h1, h2, h3 { letter-spacing: -0.022em; font-weight: 600; }
-  h1 { letter-spacing: -0.03em; }
+  h1 { letter-spacing: -0.032em; font-weight: 700; }
+
+  /* Buttons get a springy press everywhere */
+  button { transition: transform 0.12s cubic-bezier(0.16,1,0.3,1); }
+  button:active:not(:disabled) { transform: scale(0.975); }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -85,10 +89,14 @@
            transition-all duration-150;
   }
 
-  /* Premium card — soft layered shadow, no harsh border */
+  /* Premium card — soft layered shadow, no harsh border, subtle hover lift */
   .card {
     @apply bg-white rounded-3xl shadow-[0_1px_3px_rgba(17,24,39,0.06),0_8px_24px_rgba(17,24,39,0.05)]
-           border border-gray-100/60;
+           border border-gray-100/60 transition-all duration-200;
+  }
+  .card-interactive {
+    @apply bg-white rounded-3xl border border-gray-100/60 transition-all duration-200
+           hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(17,24,39,0.08),0_20px_48px_rgba(17,24,39,0.1)] cursor-pointer;
   }
 
   /* Frosted bar (headers / sidebars) */

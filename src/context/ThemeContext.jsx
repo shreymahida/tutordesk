@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 const ThemeContext = createContext(null)
 
@@ -29,6 +30,7 @@ function applyTheme(mode, accentKey) {
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(() => localStorage.getItem('thq_theme') || 'light')
   const [accent, setAccent] = useState(() => localStorage.getItem('thq_accent') || 'violet')
+  const [logoUrl, setLogoUrl] = useState(() => localStorage.getItem('thq_logo') || '')
 
   useEffect(() => {
     applyTheme(mode, accent)
@@ -36,8 +38,17 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('thq_accent', accent)
   }, [mode, accent])
 
+  useEffect(() => { localStorage.setItem('thq_logo', logoUrl || '') }, [logoUrl])
+
+  // Load shared business branding (logo) once
+  useEffect(() => {
+    supabase.from('settings').select('logo_url').eq('id', 1).maybeSingle().then(({ data }) => {
+      if (data?.logo_url) setLogoUrl(data.logo_url)
+    })
+  }, [])
+
   return (
-    <ThemeContext.Provider value={{ mode, setMode, accent, setAccent, toggleMode: () => setMode(m => m === 'light' ? 'dark' : 'light') }}>
+    <ThemeContext.Provider value={{ mode, setMode, accent, setAccent, logoUrl, setLogoUrl, toggleMode: () => setMode(m => m === 'light' ? 'dark' : 'light') }}>
       {children}
     </ThemeContext.Provider>
   )

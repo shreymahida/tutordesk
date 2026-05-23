@@ -1,21 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme, ACCENTS } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
-import { Sun, Moon, Check, User, Palette, LogOut, Mail, Shield } from 'lucide-react'
+import { Sun, Moon, Check, User, Palette, LogOut, Mail, Shield, Image, Upload, Loader2, GraduationCap } from 'lucide-react'
 
 export default function Settings() {
   const { profile, signOut, refreshProfile } = useAuth()
-  const { mode, setMode, accent, setAccent } = useTheme()
+  const { mode, setMode, accent, setAccent, logoUrl, setLogoUrl } = useTheme()
   const [name, setName] = useState(profile?.name || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef(null)
+  const isAdmin = profile?.role === 'admin'
 
   async function saveName() {
     setSaving(true)
     await supabase.from('profiles').update({ name }).eq('id', profile.id)
     await refreshProfile?.()
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function uploadLogo(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `logo-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('branding').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('branding').getPublicUrl(path)
+      await supabase.from('settings').update({ logo_url: data.publicUrl }).eq('id', 1)
+      setLogoUrl(data.publicUrl)
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
+
+  async function removeLogo() {
+    await supabase.from('settings').update({ logo_url: '' }).eq('id', 1)
+    setLogoUrl('')
   }
 
   return (
@@ -78,6 +102,25 @@ export default function Settings() {
         </div>
         <p className="text-xs text-gray-400 mt-3">Your choice applies instantly across the whole app and is saved on this device.</p>
       </section>
+
+      {/* Branding — admin only */}
+      {isAdmin && (
+        <section className="card p-6">
+          <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Image size={17} /> Branding</h2>
+          <p className="text-xs text-gray-500 mb-4">Upload your business logo — it replaces the graduation cap across the app and parent portals.</p>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center overflow-hidden">
+              {logoUrl ? <img src={logoUrl} alt="logo" className="w-full h-full object-cover" /> : <GraduationCap size={28} className="text-white" />}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
+            <button onClick={() => fileRef.current?.click()} disabled={uploading}
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium">
+              {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : <><Upload size={14} /> Upload logo</>}
+            </button>
+            {logoUrl && <button onClick={removeLogo} className="text-sm text-red-500 hover:underline">Remove</button>}
+          </div>
+        </section>
+      )}
 
       {/* Sign out */}
       <section className="card p-6">
