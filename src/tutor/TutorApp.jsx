@@ -10,8 +10,10 @@ import Curriculum from '../pages/Curriculum'
 import TimeClock from '../pages/TimeClock'
 import Settings from '../pages/Settings'
 import Whiteboard from '../pages/Whiteboard'
+import Tasks from '../pages/Tasks'
+import Announcements from '../pages/Announcements'
 import { useTheme } from '../context/ThemeContext'
-import { Home, Calendar, Clock, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen, MoreHorizontal, PenTool, Settings as SettingsIcon, Sun, Moon, X } from 'lucide-react'
+import { Home, Calendar, Clock, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen, MoreHorizontal, PenTool, Settings as SettingsIcon, Sun, Moon, X, CheckSquare, Megaphone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const NAV = [
@@ -23,19 +25,23 @@ const NAV = [
 ]
 
 const MORE_NAV = [
+  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Resources', icon: BookOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
-const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, whiteboard: Whiteboard, curriculum: Curriculum, messages: Messages, settings: Settings }
+const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, whiteboard: Whiteboard, curriculum: Curriculum, messages: Messages, settings: Settings, tasks: Tasks, announcements: Announcements }
 
 const ALL_NAV = [
   { id: 'today', label: 'Today', icon: Home },
   { id: 'sessions', label: 'Sessions', icon: Calendar },
   { id: 'timeclock', label: 'Time Clock', icon: Clock },
   { id: 'students', label: 'Students', icon: Users },
+  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Resources', icon: BookOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },

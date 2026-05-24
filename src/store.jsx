@@ -16,6 +16,8 @@ export function AppProvider({ children }) {
   const [leads, setLeads] = useState([])
   const [settings, setSettings] = useState(null)
   const [assignments, setAssignments] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [announcements, setAnnouncements] = useState([])
   const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
@@ -28,6 +30,8 @@ export function AppProvider({ children }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'progress_notes' }, loadProgressNotes)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'families' }, loadFamilies)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, loadLeads)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, loadTasks)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, loadAnnouncements)
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [user])
@@ -36,8 +40,49 @@ export function AppProvider({ children }) {
     setDataLoading(true)
     // RLS handles tutor scoping — tutors will get empty/filtered results automatically
     // and won't see payments/leads/families at all.
-    await Promise.all([loadStudents(), loadSessions(), loadProgressNotes(), loadAssignments(), loadPayments(), loadFamilies(), loadLeads(), loadSettings()])
+    await Promise.all([loadStudents(), loadSessions(), loadProgressNotes(), loadAssignments(), loadPayments(), loadFamilies(), loadLeads(), loadSettings(), loadTasks(), loadAnnouncements()])
     setDataLoading(false)
+  }
+
+  async function loadTasks() {
+    const { data } = await supabase.from('tasks').select('*').order('created_at', { ascending: false })
+    setTasks(fromDB(data))
+  }
+  async function loadAnnouncements() {
+    const { data } = await supabase.from('announcements').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false })
+    setAnnouncements(fromDB(data))
+  }
+  // ── Tasks ──────────────────────────────────────────────────────────────────
+  async function addTask(t) {
+    const { data } = await supabase.from('tasks').insert(snakify({ ...t, createdBy: user.id })).select().single()
+    if (data) setTasks(p => [camelize(data), ...p])
+  }
+  async function updateTask(id, t) {
+    const patch = { ...t }
+    if (t.status === 'done') patch.completedAt = new Date().toISOString()
+    if (t.status === 'open') patch.completedAt = null
+    const { data } = await supabase.from('tasks').update(snakify(patch)).eq('id', id).select().single()
+    if (data) setTasks(p => p.map(x => x.id === id ? camelize(data) : x))
+  }
+  async function deleteTask(id) {
+    await supabase.from('tasks').delete().eq('id', id)
+    setTasks(p => p.filter(x => x.id !== id))
+  }
+  // ── Announcements ────────────────────────────────────────────────────────────
+  async function addAnnouncement(a) {
+    const { data } = await supabase.from('announcements').insert(snakify({ ...a, createdBy: user.id })).select().single()
+    if (data) setAnnouncements(p => [camelize(data), ...p])
+  }
+  async function updateAnnouncement(id, a) {
+    const { data } = await supabase.from('announcements').update(snakify(a)).eq('id', id).select().single()
+    if (data) setAnnouncements(p => p.map(x => x.id === id ? camelize(data) : x))
+  }
+  async function deleteAnnouncement(id) {
+    await supabase.from('announcements').delete().eq('id', id)
+    setAnnouncements(p => p.filter(x => x.id !== id))
+  }
+  async function markAnnouncementRead(id) {
+    await supabase.from('announcement_reads').upsert({ announcement_id: id, user_id: user.id })
   }
 
   async function loadAssignments() {
@@ -299,6 +344,8 @@ export function AppProvider({ children }) {
       leads, updateLead, deleteLead,
       settings, updateSettings,
       assignments, assignStudent, unassignStudent,
+      tasks, addTask, updateTask, deleteTask,
+      announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, markAnnouncementRead,
       generateMonthlyInvoices,
       saveLessonPlan, getLessonPlans, generateLessonPlan,
       getMyOpenEntry, clockIn, clockOut, getTimeEntries,

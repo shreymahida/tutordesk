@@ -15,6 +15,8 @@ import Leads from './pages/Leads'
 import Messages from './pages/Messages'
 import Curriculum from './pages/Curriculum'
 import TimeClock from './pages/TimeClock'
+import Tasks from './pages/Tasks'
+import Announcements from './pages/Announcements'
 import Settings from './pages/Settings'
 import Whiteboard from './pages/Whiteboard'
 import { useTheme } from './context/ThemeContext'
@@ -23,7 +25,7 @@ import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
 import BoardRoom from './pages/BoardRoom'
 import TutorApp from './tutor/TutorApp'
-import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon, CheckSquare, Megaphone } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -33,6 +35,8 @@ const NAV = [
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
+  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
   { id: 'timeclock', label: 'Time Clock', icon: Clock },
   { id: 'payments', label: 'Payments', icon: DollarSign },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
@@ -42,7 +46,7 @@ const NAV = [
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
-const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, whiteboard: Whiteboard, curriculum: Curriculum, timeclock: TimeClock, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team, settings: Settings }
+const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, whiteboard: Whiteboard, curriculum: Curriculum, tasks: Tasks, announcements: Announcements, timeclock: TimeClock, payments: Payments, progress: Progress, messages: Messages, leads: Leads, team: Team, settings: Settings }
 
 function MainApp() {
   const { profile, signOut, isAdmin } = useAuth()
