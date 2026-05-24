@@ -27,17 +27,17 @@ export default function TutorToday() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-7 max-w-4xl">
       {/* Greeting */}
       <div>
-        <p className="text-2xl font-bold text-gray-900">{greeting}.</p>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">{greeting}.</h1>
+        <p className="text-gray-500 text-base mt-1.5">
           {myToday.length === 0 ? "No sessions on your plate today — enjoy the breather." : `You have ${myToday.length} session${myToday.length !== 1 ? 's' : ''} today.`}
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <StatCard label="This week" value={completedWeek} sub="completed" />
         <StatCard label="Hours" value={hoursWeek.toFixed(1)} sub="taught" />
         <StatCard label="Upcoming" value={upcomingWeek} sub="next 7 days" />
@@ -60,9 +60,11 @@ export default function TutorToday() {
       )}
 
       {myToday.length === 0 && myTomorrow.length === 0 && (
-        <div className="bg-gray-50 rounded-2xl p-8 text-center border border-gray-100">
-          <Sparkles size={28} className="mx-auto mb-2 text-violet-600" />
-          <p className="font-semibold text-gray-900">All clear ahead</p>
+        <div className="bg-gray-50 rounded-2xl p-12 text-center border border-gray-200/70 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mx-auto mb-4">
+            <Sparkles size={30} className="text-violet-600" />
+          </div>
+          <p className="text-lg font-semibold text-gray-900">All clear ahead</p>
           <p className="text-sm text-gray-500 mt-1">No sessions in the next 48 hours.</p>
         </div>
       )}
@@ -72,10 +74,12 @@ export default function TutorToday() {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <p className="text-xs text-gray-400 font-medium">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      <p className="text-xs text-gray-400">{sub}</p>
+    <div className="relative bg-white rounded-2xl border border-gray-200/70 shadow-sm hover:shadow-md transition-all duration-200 p-5 overflow-hidden">
+      {/* Accent top stripe (accent-aware) */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-violet-500" />
+      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
+      <p className="text-4xl font-bold text-gray-900 mt-2 tracking-tight tabular-nums">{value}</p>
+      <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
     </div>
   )
 }
@@ -83,7 +87,10 @@ function StatCard({ label, value, sub }) {
 function Section({ title, children, empty }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{title}</h2>
+      <div className="flex items-center gap-3 mb-3">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{title}</h2>
+        <div className="flex-1 h-px bg-gray-200/70" />
+      </div>
       {empty ? <p className="text-sm text-gray-400">{empty}</p> : children}
     </div>
   )

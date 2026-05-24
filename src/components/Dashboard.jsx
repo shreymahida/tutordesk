@@ -140,7 +140,7 @@ function StatCard({ icon, label, value, color }) {
     emerald: 'from-emerald-400 to-emerald-600',
   }
   return (
-    <div className="card p-5 hover:shadow-[0_4px_12px_rgba(17,24,39,0.08),0_16px_40px_rgba(17,24,39,0.08)] transition-shadow">
+    <div className="card p-5 hover:shadow-[0_4px_12px_rgba(17,24,39,0.08),0_16px_40px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-200">
       <div className={`inline-flex p-2.5 rounded-2xl bg-gradient-to-br ${colors[color]} text-white shadow-sm mb-4`}>{icon}</div>
       <p className="text-3xl font-semibold text-gray-900 tracking-tight tabular-nums">{value}</p>
       <p className="text-[13px] text-gray-500 mt-1">{label}</p>

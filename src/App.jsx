@@ -89,10 +89,13 @@ function MainApp() {
           </button>
         </div>
 
+        {/* Separator below branding */}
+        <div className="mx-5 mb-2 h-px bg-gray-200/70" />
+
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
           {visibleNav.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => navigate(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-150 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
               <Icon size={17} strokeWidth={page === id ? 2.4 : 2} />
               {label}
             </button>
