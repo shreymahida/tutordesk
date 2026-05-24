@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../store'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Clock, Play, Square, Calendar, Users, TrendingUp, GraduationCap, Fingerprint } from 'lucide-react'
+import { Clock, Play, Square, Calendar, Users, TrendingUp, GraduationCap, Fingerprint, Check, Download } from 'lucide-react'
 
 export default function TimeClock() {
   const { isAdmin, profile } = useAuth()
-  const { getMyOpenEntry, clockIn, clockOut, getTimeEntries, students, sessions } = useApp()
+  const { getMyOpenEntry, clockIn, clockOut, getTimeEntries, approveTimeEntry, students, sessions } = useApp()
   const [openEntry, setOpenEntry] = useState(null)
   const [entries, setEntries] = useState([])
   const [profiles, setProfiles] = useState({})
@@ -55,6 +55,28 @@ export default function TimeClock() {
     await clockOut(openEntry.id)
     setOpenEntry(null)
     refresh()
+  }
+
+  async function toggleApprove(e) {
+    await approveTimeEntry(e.id, !e.approved)
+    refresh()
+  }
+
+  function exportCSV() {
+    const rows = [['Name', 'Date', 'Clock in', 'Clock out', 'Hours', 'Student', 'Note', 'Approved']]
+    entries.forEach(e => {
+      const hours = e.clockOut ? ((new Date(e.clockOut) - new Date(e.clockIn)) / 3600000).toFixed(2) : ''
+      rows.push([
+        profiles[e.userId] || '', e.clockIn.split('T')[0],
+        formatTime(e.clockIn), e.clockOut ? formatTime(e.clockOut) : '',
+        hours, studentName(e.studentId) || '', (e.note || '').replace(/,/g, ';'), e.approved ? 'Yes' : 'No',
+      ])
+    })
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    const a = document.createElement('a')
+    a.href = url; a.download = `timesheet-${new Date().toISOString().split('T')[0]}.csv`; a.click()
+    URL.revokeObjectURL(url)
   }
 
   // Elapsed for the open shift
@@ -153,14 +175,21 @@ export default function TimeClock() {
 
       {/* History */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">History</h2>
-          {isAdmin && (
-            <div className="flex gap-1 bg-gray-100 rounded-full p-0.5">
-              <button onClick={() => setScope('me')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${scope === 'me' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>Me</button>
-              <button onClick={() => setScope('all')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1 ${scope === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}><Users size={11} /> Everyone</button>
-            </div>
-          )}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 gap-2 flex-wrap">
+          <h2 className="font-semibold text-gray-900">{isAdmin && scope === 'all' ? 'Timesheets' : 'History'}</h2>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button onClick={exportCSV} className="text-xs flex items-center gap-1 px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-violet-300 font-medium">
+                <Download size={12} /> Export CSV
+              </button>
+            )}
+            {isAdmin && (
+              <div className="flex gap-1 bg-gray-100 rounded-full p-0.5">
+                <button onClick={() => setScope('me')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${scope === 'me' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>Me</button>
+                <button onClick={() => setScope('all')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1 ${scope === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}><Users size={11} /> Everyone</button>
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -194,11 +223,17 @@ export default function TimeClock() {
                       )}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     {dur != null ? (
                       <p className="text-sm font-semibold text-gray-900 tabular-nums">{(dur / 3600000).toFixed(2)}h</p>
                     ) : (
                       <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">active</span>
+                    )}
+                    {isAdmin && scope === 'all' && dur != null && (
+                      <button onClick={() => toggleApprove(e)}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition-colors ${e.approved ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-violet-50 hover:text-violet-700'}`}>
+                        <Check size={11} /> {e.approved ? 'Approved' : 'Approve'}
+                      </button>
                     )}
                   </div>
                 </div>

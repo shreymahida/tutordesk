@@ -12,8 +12,10 @@ import Settings from '../pages/Settings'
 import Whiteboard from '../pages/Whiteboard'
 import Tasks from '../pages/Tasks'
 import Announcements from '../pages/Announcements'
+import Availability from '../pages/Availability'
+import Documents from '../pages/Documents'
 import { useTheme } from '../context/ThemeContext'
-import { Home, Calendar, Clock, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen, MoreHorizontal, PenTool, Settings as SettingsIcon, Sun, Moon, X, CheckSquare, Megaphone } from 'lucide-react'
+import { Home, Calendar, Clock, Users, MessageSquare, LogOut, GraduationCap, Loader2, BookOpen, MoreHorizontal, PenTool, Settings as SettingsIcon, Sun, Moon, X, CheckSquare, Megaphone, CalendarOff, FolderOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const NAV = [
@@ -27,13 +29,15 @@ const NAV = [
 const MORE_NAV = [
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'announcements', label: 'Announcements', icon: Megaphone },
+  { id: 'availability', label: 'Availability', icon: CalendarOff },
+  { id: 'documents', label: 'Documents', icon: FolderOpen },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Resources', icon: BookOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
-const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, whiteboard: Whiteboard, curriculum: Curriculum, messages: Messages, settings: Settings, tasks: Tasks, announcements: Announcements }
+const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, whiteboard: Whiteboard, curriculum: Curriculum, messages: Messages, settings: Settings, tasks: Tasks, announcements: Announcements, availability: Availability, documents: Documents }
 
 const ALL_NAV = [
   { id: 'today', label: 'Today', icon: Home },
@@ -42,6 +46,8 @@ const ALL_NAV = [
   { id: 'students', label: 'Students', icon: Users },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'announcements', label: 'Announcements', icon: Megaphone },
+  { id: 'availability', label: 'Availability', icon: CalendarOff },
+  { id: 'documents', label: 'Documents', icon: FolderOpen },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
   { id: 'curriculum', label: 'Resources', icon: BookOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },

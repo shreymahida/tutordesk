@@ -141,7 +141,56 @@ export function AppProvider({ children }) {
     setLeads(p => p.filter(x => x.id !== id))
   }
 
+  // ── Availability ───────────────────────────────────────────────────────────
+  async function getMyAvailability() {
+    const { data } = await supabase.from('availability').select('*').eq('user_id', user.id).order('day_of_week')
+    return fromDB(data)
+  }
+  async function addAvailabilitySlot(slot) {
+    const { data } = await supabase.from('availability').insert(snakify({ ...slot, userId: user.id })).select().single()
+    return data ? camelize(data) : null
+  }
+  async function deleteAvailabilitySlot(id) {
+    await supabase.from('availability').delete().eq('id', id)
+  }
+
+  // ── Time off ───────────────────────────────────────────────────────────────
+  async function getTimeOff({ allUsers = false } = {}) {
+    let q = supabase.from('time_off').select('*').order('start_date', { ascending: false })
+    if (!allUsers) q = q.eq('user_id', user.id)
+    const { data } = await q
+    return fromDB(data)
+  }
+  async function requestTimeOff(req) {
+    const { data } = await supabase.from('time_off').insert(snakify({ ...req, userId: user.id })).select().single()
+    return data ? camelize(data) : null
+  }
+  async function reviewTimeOff(id, status) {
+    await supabase.from('time_off').update({ status, reviewed_by: user.id }).eq('id', id)
+  }
+  async function cancelTimeOff(id) {
+    await supabase.from('time_off').delete().eq('id', id)
+  }
+
+  // ── Documents ──────────────────────────────────────────────────────────────
+  async function getDocuments({ allUsers = false } = {}) {
+    let q = supabase.from('documents').select('*').order('created_at', { ascending: false })
+    if (!allUsers) q = q.eq('user_id', user.id)
+    const { data } = await q
+    return fromDB(data)
+  }
+  async function addDocument(doc) {
+    const { data } = await supabase.from('documents').insert(snakify({ ...doc, uploadedBy: user.id })).select().single()
+    return data ? camelize(data) : null
+  }
+  async function deleteDocument(id) {
+    await supabase.from('documents').delete().eq('id', id)
+  }
+
   // ── Time clock ─────────────────────────────────────────────────────────────
+  async function approveTimeEntry(id, approved = true) {
+    await supabase.from('time_entries').update({ approved, approved_by: approved ? user.id : null }).eq('id', id)
+  }
   async function getMyOpenEntry() {
     const { data } = await supabase.from('time_entries').select('*').eq('user_id', user.id).is('clock_out', null).order('clock_in', { ascending: false }).limit(1).maybeSingle()
     return data ? camelize(data) : null
@@ -348,7 +397,10 @@ export function AppProvider({ children }) {
       announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, markAnnouncementRead,
       generateMonthlyInvoices,
       saveLessonPlan, getLessonPlans, generateLessonPlan,
-      getMyOpenEntry, clockIn, clockOut, getTimeEntries,
+      getMyOpenEntry, clockIn, clockOut, getTimeEntries, approveTimeEntry,
+      getMyAvailability, addAvailabilitySlot, deleteAvailabilitySlot,
+      getTimeOff, requestTimeOff, reviewTimeOff, cancelTimeOff,
+      getDocuments, addDocument, deleteDocument,
     }}>
       {children}
     </AppContext.Provider>
