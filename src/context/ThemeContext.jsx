@@ -15,6 +15,12 @@ export const ACCENTS = {
   indigo: { label: 'Indigo', swatch: '#4f46e5', scale: { 50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } },
 }
 
+function hexToRgb(hex) {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
 function applyTheme(mode, accentKey) {
   const root = document.documentElement
   // Accent: override the violet-* scale that all utilities reference
@@ -22,6 +28,21 @@ function applyTheme(mode, accentKey) {
   Object.entries(accent.scale).forEach(([k, v]) => root.style.setProperty(`--color-violet-${k}`, v))
   // also map brand-* tokens
   Object.entries(accent.scale).forEach(([k, v]) => root.style.setProperty(`--color-brand-${k}`, v))
+
+  // In dark mode, the faint accent tints (50/100) used as box backgrounds must
+  // become dark translucent washes, and the dark text shades (700/800) must
+  // lighten — otherwise accent-tinted boxes render bright white in dark mode.
+  // These vars are set inline so they override the CSS [data-theme="dark"] block.
+  if (mode === 'dark') {
+    const [r, g, b] = hexToRgb(accent.scale[600])
+    for (const key of ['violet', 'brand']) {
+      root.style.setProperty(`--color-${key}-50`, `rgba(${r},${g},${b},0.16)`)
+      root.style.setProperty(`--color-${key}-100`, `rgba(${r},${g},${b},0.26)`)
+      root.style.setProperty(`--color-${key}-700`, accent.scale[300])
+      root.style.setProperty(`--color-${key}-800`, accent.scale[200])
+      root.style.setProperty(`--color-${key}-900`, accent.scale[200])
+    }
+  }
 
   // Dark mode
   root.setAttribute('data-theme', mode)
