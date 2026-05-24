@@ -141,6 +141,42 @@ export function AppProvider({ children }) {
     setLeads(p => p.filter(x => x.id !== id))
   }
 
+  // ── Training courses ─────────────────────────────────────────────────────────
+  async function getCourses() {
+    const { data } = await supabase.from('courses').select('*').order('created_at', { ascending: false })
+    return fromDB(data)
+  }
+  async function saveCourse(c) {
+    if (c.id) {
+      const { data } = await supabase.from('courses').update(snakify(c)).eq('id', c.id).select().single()
+      return data ? camelize(data) : null
+    }
+    const { data } = await supabase.from('courses').insert(snakify({ ...c, createdBy: user.id })).select().single()
+    return data ? camelize(data) : null
+  }
+  async function deleteCourse(id) { await supabase.from('courses').delete().eq('id', id) }
+  async function getMyCourseProgress() {
+    const { data } = await supabase.from('course_progress').select('*').eq('user_id', user.id)
+    return fromDB(data)
+  }
+  async function getAllCourseProgress() {
+    const { data } = await supabase.from('course_progress').select('*')
+    return fromDB(data)
+  }
+  async function completeCourse(courseId, score) {
+    await supabase.from('course_progress').upsert(snakify({ courseId, userId: user.id, score, completedAt: new Date().toISOString() }), { onConflict: 'course_id,user_id' })
+  }
+
+  // ── Recognition ──────────────────────────────────────────────────────────────
+  async function getRecognition() {
+    const { data } = await supabase.from('recognition').select('*').order('created_at', { ascending: false }).limit(100)
+    return fromDB(data)
+  }
+  async function giveRecognition(r) {
+    const { data } = await supabase.from('recognition').insert(snakify({ ...r, fromUser: user.id })).select().single()
+    return data ? camelize(data) : null
+  }
+
   // ── Availability ───────────────────────────────────────────────────────────
   async function getMyAvailability() {
     const { data } = await supabase.from('availability').select('*').eq('user_id', user.id).order('day_of_week')
@@ -401,6 +437,8 @@ export function AppProvider({ children }) {
       getMyAvailability, addAvailabilitySlot, deleteAvailabilitySlot,
       getTimeOff, requestTimeOff, reviewTimeOff, cancelTimeOff,
       getDocuments, addDocument, deleteDocument,
+      getCourses, saveCourse, deleteCourse, getMyCourseProgress, getAllCourseProgress, completeCourse,
+      getRecognition, giveRecognition,
     }}>
       {children}
     </AppContext.Provider>
