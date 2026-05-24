@@ -28,8 +28,20 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        navigateFallbackDenylist: [/^\/parent\//, /^\/book\//, /^\/family\//],
+        globPatterns: ['**/*.{js,css,svg,png,ico}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        // Always fetch fresh HTML from network so a new deploy is never blocked
+        // by a stale cached page. Falls back to cache only when offline.
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: { cacheName: 'html', networkTimeoutSeconds: 4 },
+          },
+        ],
+        navigateFallbackDenylist: [/^\/parent\//, /^\/book\//, /^\/family\//, /^\/board\//],
       },
     }),
   ],
