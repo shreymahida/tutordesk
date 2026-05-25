@@ -32,29 +32,37 @@ import BoardRoom from './pages/BoardRoom'
 import TutorApp from './tutor/TutorApp'
 import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon, CheckSquare, Megaphone, CalendarOff, FolderOpen, BarChart3, Award, BookMarked } from 'lucide-react'
 
-const NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'students', label: 'Students', icon: Users },
-  { id: 'families', label: 'Families', icon: Users2 },
-  { id: 'sessions', label: 'Sessions', icon: Calendar },
-  { id: 'calendar', label: 'Calendar', icon: CalendarDays },
-  { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
-  { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
-  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-  { id: 'announcements', label: 'Announcements', icon: Megaphone },
-  { id: 'training', label: 'Training', icon: BookMarked },
-  { id: 'recognition', label: 'Recognition', icon: Award },
-  { id: 'timeclock', label: 'Time Clock', icon: Clock },
-  { id: 'availability', label: 'Availability', icon: CalendarOff },
-  { id: 'documents', label: 'Documents', icon: FolderOpen },
-  { id: 'payments', label: 'Payments', icon: DollarSign },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'progress', label: 'Progress', icon: TrendingUp },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'leads', label: 'Leads', icon: Inbox },
-  { id: 'team', label: 'Team', icon: UserCircle2 },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+const NAV_SECTIONS = [
+  { section: 'Overview', items: [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'reports', label: 'Reports', icon: BarChart3 },
+  ]},
+  { section: 'Teaching', items: [
+    { id: 'students', label: 'Students', icon: Users },
+    { id: 'families', label: 'Families', icon: Users2 },
+    { id: 'sessions', label: 'Sessions', icon: Calendar },
+    { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+    { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
+    { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
+    { id: 'progress', label: 'Progress', icon: TrendingUp },
+  ]},
+  { section: 'Business', items: [
+    { id: 'payments', label: 'Payments', icon: DollarSign },
+    { id: 'leads', label: 'Leads', icon: Inbox },
+  ]},
+  { section: 'Team & HR', items: [
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'timeclock', label: 'Time Clock', icon: Clock },
+    { id: 'availability', label: 'Availability', icon: CalendarOff },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone },
+    { id: 'training', label: 'Training', icon: BookMarked },
+    { id: 'recognition', label: 'Recognition', icon: Award },
+    { id: 'documents', label: 'Documents', icon: FolderOpen },
+    { id: 'team', label: 'Team', icon: UserCircle2 },
+  ]},
 ]
+const ADMIN_ONLY = new Set(['reports', 'leads', 'team'])
 
 const PAGES = { dashboard: Dashboard, students: Students, families: Families, sessions: Sessions, calendar: CalendarPage, whiteboard: Whiteboard, curriculum: Curriculum, tasks: Tasks, announcements: Announcements, training: Training, recognition: Recognition, timeclock: TimeClock, availability: Availability, documents: Documents, payments: Payments, reports: Reports, progress: Progress, messages: Messages, leads: Leads, team: Team, settings: Settings }
 
@@ -66,7 +74,9 @@ function MainApp() {
   const Page = PAGES[page]
 
   const { mode, toggleMode, logoUrl } = useTheme()
-  const visibleNav = NAV.filter(n => !['team', 'leads', 'reports'].includes(n.id) || isAdmin)
+  const visibleSections = NAV_SECTIONS
+    .map(sec => ({ ...sec, items: sec.items.filter(n => !ADMIN_ONLY.has(n.id) || isAdmin) }))
+    .filter(sec => sec.items.length > 0)
 
   function navigate(id) { setPage(id); setSidebarOpen(false) }
 
@@ -106,13 +116,20 @@ function MainApp() {
         {/* Separator below branding */}
         <div className="mx-5 mb-2 h-px bg-gray-200/70" />
 
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {visibleNav.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => navigate(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
-              <Icon size={17} strokeWidth={page === id ? 2.4 : 2} />
-              {label}
-            </button>
+        <nav className="flex-1 px-3 pb-2 overflow-y-auto">
+          {visibleSections.map(sec => (
+            <div key={sec.section} className="mb-3">
+              <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{sec.section}</p>
+              <div className="space-y-0.5">
+                {sec.items.map(({ id, label, icon: Icon }) => (
+                  <button key={id} onClick={() => navigate(id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
+                    <Icon size={17} strokeWidth={page === id ? 2.4 : 2} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
