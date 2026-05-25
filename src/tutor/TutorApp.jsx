@@ -43,21 +43,28 @@ const MORE_NAV = [
 
 const PAGES = { today: TutorToday, sessions: TutorSessions, timeclock: TimeClock, calendar: TutorCalendar, students: TutorStudents, whiteboard: Whiteboard, curriculum: Curriculum, messages: Messages, settings: Settings, tasks: Tasks, announcements: Announcements, availability: Availability, documents: Documents, training: Training, recognition: Recognition }
 
-const ALL_NAV = [
-  { id: 'today', label: 'Today', icon: Home },
-  { id: 'sessions', label: 'Sessions', icon: Calendar },
-  { id: 'timeclock', label: 'Time Clock', icon: Clock },
-  { id: 'students', label: 'Students', icon: Users },
-  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-  { id: 'announcements', label: 'Announcements', icon: Megaphone },
-  { id: 'training', label: 'Training', icon: BookMarked },
-  { id: 'recognition', label: 'Recognition', icon: Award },
-  { id: 'availability', label: 'Availability', icon: CalendarOff },
-  { id: 'documents', label: 'Documents', icon: FolderOpen },
-  { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
-  { id: 'curriculum', label: 'Resources', icon: BookOpen },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+const NAV_SECTIONS = [
+  { section: 'Overview', items: [
+    { id: 'today', label: 'Today', icon: Home },
+  ]},
+  { section: 'Teaching', items: [
+    { id: 'sessions', label: 'Sessions', icon: Calendar },
+    { id: 'students', label: 'Students', icon: Users },
+    { id: 'whiteboard', label: 'Whiteboard', icon: PenTool },
+    { id: 'curriculum', label: 'Resources', icon: BookOpen },
+  ]},
+  { section: 'My Work', items: [
+    { id: 'timeclock', label: 'Time Clock', icon: Clock },
+    { id: 'availability', label: 'Availability', icon: CalendarOff },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'documents', label: 'Documents', icon: FolderOpen },
+  ]},
+  { section: 'Team', items: [
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone },
+    { id: 'training', label: 'Training', icon: BookMarked },
+    { id: 'recognition', label: 'Recognition', icon: Award },
+  ]},
 ]
 
 export default function TutorApp() {
@@ -100,14 +107,21 @@ export default function TutorApp() {
         </div>
         {/* Separator below branding */}
         <div className="mx-5 mb-2 h-px bg-gray-200/70" />
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {ALL_NAV.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => go(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
-              <Icon size={17} strokeWidth={page === id ? 2.4 : 2} />
-              <span className="flex-1 text-left">{label}</span>
-              {id === 'messages' && unreadCount > 0 && <span className="text-xs bg-white/90 text-violet-700 rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center font-bold">{unreadCount}</span>}
-            </button>
+        <nav className="flex-1 px-3 pb-2 overflow-y-auto">
+          {NAV_SECTIONS.map(sec => (
+            <div key={sec.section} className="mb-3">
+              <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{sec.section}</p>
+              <div className="space-y-0.5">
+                {sec.items.map(({ id, label, icon: Icon }) => (
+                  <button key={id} onClick={() => go(id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${page === id ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(124,58,237,0.25)]' : 'text-gray-600 hover:bg-gray-500/8 hover:text-gray-900'}`}>
+                    <Icon size={17} strokeWidth={page === id ? 2.4 : 2} />
+                    <span className="flex-1 text-left">{label}</span>
+                    {id === 'messages' && unreadCount > 0 && <span className="text-xs bg-white/90 text-violet-700 rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center font-bold">{unreadCount}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="p-4">
