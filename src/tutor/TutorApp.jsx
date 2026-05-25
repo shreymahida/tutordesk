@@ -67,6 +67,9 @@ const NAV_SECTIONS = [
   ]},
 ]
 
+// Flat list for the mobile bottom nav + "More" sheet
+const ALL_NAV = NAV_SECTIONS.flatMap(s => s.items)
+
 export default function TutorApp() {
   const { profile, signOut } = useAuth()
   const { dataLoading } = useApp()
