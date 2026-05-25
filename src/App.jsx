@@ -30,6 +30,7 @@ import FamilyPortal from './pages/FamilyPortal'
 import BookPage from './pages/BookPage'
 import BoardRoom from './pages/BoardRoom'
 import TutorApp from './tutor/TutorApp'
+import ErrorBoundary from './components/ErrorBoundary'
 import { LayoutDashboard, Users, Users2, Calendar, CalendarDays, DollarSign, TrendingUp, GraduationCap, Menu, X, LogOut, UserCircle2, Loader2, Inbox, MessageSquare, BookOpen, Clock, Settings as SettingsIcon, PenTool, Sun, Moon, CheckSquare, Megaphone, CalendarOff, FolderOpen, BarChart3, Award, BookMarked } from 'lucide-react'
 
 const NAV_SECTIONS = [
@@ -205,12 +206,14 @@ function PublicRouter() {
 export default function App() {
   const publicPage = PublicRouter()
   return (
-    <ThemeProvider>
-      {publicPage || (
-        <AuthProvider>
-          <AppShell />
-        </AuthProvider>
-      )}
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        {publicPage || (
+          <AuthProvider>
+            <AppShell />
+          </AuthProvider>
+        )}
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }

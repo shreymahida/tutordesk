@@ -24,9 +24,17 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-    setProfile(data)
+  async function fetchProfile(userId, attempt = 0) {
+    // maybeSingle() returns null (no throw) when the row isn't there yet.
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    if (!data && attempt < 5) {
+      // Brand-new signup: the handle_new_user trigger may not have committed
+      // the profile row yet. Retry briefly before giving up.
+      setTimeout(() => fetchProfile(userId, attempt + 1), 600)
+      return
+    }
+    // Fallback profile so the app never renders without one (defaults to tutor view).
+    setProfile(data || { id: userId, role: 'tutor', name: '', email: '' })
     setLoading(false)
   }
 
